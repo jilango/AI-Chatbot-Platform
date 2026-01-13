@@ -38,3 +38,7 @@ uploads/
 
 # Alembic
 alembic/versions/*.pyc
+
+# Documentation (except README)
+*.md
+!README.md
