@@ -23,8 +23,3 @@ This platform allows users to:
 
 
 ## Setup Instructions
-
-
-## License
-
-MIT
