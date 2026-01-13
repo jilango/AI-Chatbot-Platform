@@ -1,6 +1,6 @@
 # AI Chatbot Platform
 
-A minimal Chatbot Platform built with FastAPI, PostgreSQL, and OpenAI/OpenRouter integration.
+A minimal Chatbot Platform built with FastAPI, PostgreSQL, and OpenAI integration.
 
 ## Overview
 
@@ -21,11 +21,9 @@ This platform allows users to:
 
 ## Project Status
 
-This project is being built in phases. See commit history for progress.
 
 ## Setup Instructions
 
-Coming soon after Phase 1A is complete.
 
 ## License
 
