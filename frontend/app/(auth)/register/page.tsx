@@ -17,7 +17,7 @@ export default function RegisterPage() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      router.push('/');
+      router.push('/dashboard');
     }
   }, [isAuthenticated, router]);
 
@@ -41,7 +41,7 @@ export default function RegisterPage() {
 
     try {
       await register(email, password, name);
-      router.push('/');
+      router.push('/dashboard');
     } catch (err) {
       // Error is handled by the store
     }
