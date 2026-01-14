@@ -23,7 +23,13 @@ This platform allows users to:
 - **Deployment**: Railway
 
 
-**Latest Update:** Completed Phase 8 with file upload functionality:
+**Latest Update:** Completed Phase 9 with Railway deployment setup:
+- Railway deployment configuration files (Procfile, runtime.txt)
+- Comprehensive deployment documentation (DEPLOYMENT.md)
+- Architecture documentation (ARCHITECTURE.md)
+- Production-ready configuration
+
+**Previous Update:** Completed Phase 8 with file upload functionality:
 - OpenAI Files API integration for file storage
 - File upload, listing, and deletion endpoints
 - File metadata tracking in database
@@ -134,7 +140,24 @@ This platform allows users to:
 5. **Start chatting** with your agents
 6. **Try temporary chats** for quick conversations
 
+## Deployment
+
+The application is ready for deployment to Railway. See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed step-by-step instructions.
+
+### Quick Deployment Steps
+
+1. **Create Railway account** at [railway.app](https://railway.app)
+2. **Add PostgreSQL database** service
+3. **Deploy backend** service (set root directory to `backend`)
+4. **Deploy frontend** service (set root directory to `frontend`)
+5. **Configure environment variables** (see DEPLOYMENT.md)
+6. **Run database migrations** using Railway CLI
+
+For complete instructions, troubleshooting, and environment variable reference, see [DEPLOYMENT.md](./DEPLOYMENT.md).
+
 ## Architecture
+
+For detailed architecture documentation, see [ARCHITECTURE.md](./ARCHITECTURE.md).
 
 ### Data Models
 - **User**: Authentication and account management
@@ -142,6 +165,7 @@ This platform allows users to:
 - **Agent**: AI chat entities (standalone or within projects) with optional prompts
 - **TemporaryChat**: Temporary conversations that auto-delete
 - **ChatMessage**: Individual messages linked to agents or temporary chats
+- **ProjectFile**: File metadata for uploaded files
 
 ### Context Management
 - Projects can have system prompts that apply to all agents within
