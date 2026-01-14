@@ -1,67 +1,71 @@
 @import "tailwindcss";
 
-:root {
-  /* Light mode - Professional and easy on the eyes */
-  --background: #ffffff;
+:root,
+:root.light {
+  /* Light mode - Clean and professional with depth */
+  --background: #f5f5f5;
   --foreground: #1a1a1a;
-  --primary: #2563eb;
-  --primary-hover: #1d4ed8;
+  --primary: #0066ff;
+  --primary-hover: #0052cc;
   --secondary: #6366f1;
-  --accent: #f59e0b;
-  --muted: #f5f5f5;
-  --muted-foreground: #737373;
-  --border: #e5e5e5;
-  --input: #fafafa;
-  --ring: #2563eb;
+  --accent: #ff6b35;
+  --muted: #e8e8e8;
+  --muted-foreground: #6b6b6b;
+  --border: #c8c8c8;
+  --input: #ffffff;
+  --ring: #0066ff;
   --card: #ffffff;
   --card-foreground: #1a1a1a;
   --popover: #ffffff;
   --popover-foreground: #1a1a1a;
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
 }
 
-.dark {
-  /* Dark mode - Softer colors like Cursor, not pure black */
-  --background: #1e1e1e;
-  --foreground: #e4e4e7;
-  --primary: #3b82f6;
-  --primary-hover: #2563eb;
-  --secondary: #6366f1;
-  --accent: #f59e0b;
-  --muted: #27272a;
-  --muted-foreground: #a1a1aa;
-  --border: #3f3f46;
-  --input: #27272a;
-  --ring: #3b82f6;
-  --card: #27272a;
-  --card-foreground: #e4e4e7;
-  --popover: #27272a;
-  --popover-foreground: #e4e4e7;
-}
-
-* {
-  border-color: var(--border);
+:root.dark {
+  /* Dark mode - Warm grays with visible grey borders */
+  --background: #1a1a1a;
+  --foreground: #e8e8e8;
+  --primary: #3b9eff;
+  --primary-hover: #66b3ff;
+  --secondary: #9d7ff5;
+  --accent: #ff8c42;
+  --muted: #2a2a2a;
+  --muted-foreground: #9a9a9a;
+  --border: #404040;
+  --input: #242424;
+  --ring: #3b9eff;
+  --card: #232323;
+  --card-foreground: #e8e8e8;
+  --popover: #282828;
+  --popover-foreground: #e8e8e8;
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+  --shadow: 0 2px 4px 0 rgb(0 0 0 / 0.4), 0 1px 2px -1px rgb(0 0 0 / 0.3);
+  --shadow-md: 0 4px 8px -1px rgb(0 0 0 / 0.5), 0 2px 4px -2px rgb(0 0 0 / 0.4);
+  --shadow-lg: 0 10px 20px -3px rgb(0 0 0 / 0.6), 0 4px 8px -4px rgb(0 0 0 / 0.5);
 }
 
 body {
   background-color: var(--background);
   color: var(--foreground);
-  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-/* Custom scrollbar - adapts to theme */
+/* Custom scrollbar - modern and subtle */
 ::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
+  width: 12px;
+  height: 12px;
 }
 
 ::-webkit-scrollbar-track {
-  background-color: var(--background);
+  background-color: var(--muted);
 }
 
 ::-webkit-scrollbar-thumb {
   background-color: var(--muted-foreground);
-  border-radius: 9999px;
-  border: 2px solid var(--background);
+  border-radius: 6px;
+  border: 3px solid var(--muted);
 }
 
 ::-webkit-scrollbar-thumb:hover {
@@ -70,7 +74,27 @@ body {
 
 /* Smooth transitions for theme changes */
 * {
-  transition-property: background-color, border-color, color;
-  transition-duration: 0.2s;
-  transition-timing-function: ease;
+  transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Only transition color for elements without explicit color classes */
+:where(:not([class*="text-"])) {
+  transition: color 0.2s ease;
+}
+
+/* Utility classes for shadows */
+.shadow-custom {
+  box-shadow: var(--shadow);
+}
+
+.shadow-custom-sm {
+  box-shadow: var(--shadow-sm);
+}
+
+.shadow-custom-md {
+  box-shadow: var(--shadow-md);
+}
+
+.shadow-custom-lg {
+  box-shadow: var(--shadow-lg);
 }
