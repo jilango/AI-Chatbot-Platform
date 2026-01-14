@@ -1,6 +1,6 @@
 # AI Chatbot Platform
 
-A minimal Chatbot Platform built with FastAPI, PostgreSQL, and OpenAI integration.
+A multi-agent AI chatbot platform with project-level context sharing, streaming conversations, Agent prompts, and cross-agent context awareness using FastAPI, PostgreSQL, and OpenAI integration.
 
 ## Overview
 
@@ -20,21 +20,8 @@ This platform allows users to:
 - **LLM Integration**: OpenAI API (Chat Completions with streaming)
 - **Frontend**: Next.js 14 (App Router), TypeScript, Tailwind CSS
 - **State Management**: Zustand
-- **Deployment**: Railway (planned)
+- **Deployment**: Railway
 
-## Current Status
-
-✅ Phase 0: Project Initialization (Completed)
-✅ Phase 1A: Backend Core Setup (Completed)
-✅ Phase 1B: Database Schema & Models (Completed)
-✅ Phase 2: User Authentication (Completed)
-✅ Phase 3: Project & Prompt Management (Completed)
-✅ Phase 4: Basic Chat Infrastructure (Completed)
-✅ Phase 5: PostgreSQL Setup & E2E Testing (Completed)
-✅ Phase 6: Chat Interface & OpenAI Integration (Completed)
-✅ Phase 7: Projects & Agents Architecture (Completed)
-✅ Phase 8: File Upload & Management (Completed)
-⏳ Phase 9: Deployment (Coming Soon)
 
 **Latest Update:** Completed Phase 8 with file upload functionality:
 - OpenAI Files API integration for file storage
@@ -51,19 +38,19 @@ This platform allows users to:
 - Flexible prompt system at both project and agent levels
 - Modern UI/UX with light/dark mode toggle
 
-### Completed Features
-- ✅ User authentication (JWT)
-- ✅ Projects as folders with agents
-- ✅ Standalone and project-based agents
-- ✅ Temporary chats
-- ✅ Optional prompts at project and agent level
-- ✅ Context sharing between agents in projects
-- ✅ Real-time chat with OpenAI streaming (SSE)
-- ✅ Chat history persistence
-- ✅ File upload and management with OpenAI Files API
-- ✅ Professional light/dark mode UI
-- ✅ Responsive design
-- ✅ Next.js frontend with TypeScript
+### Features
+- User authentication (JWT)
+- Projects as folders with agents
+- Standalone and project-based agents
+- Temporary chats
+- Optional prompts at project and agent level
+- Context sharing between agents in projects
+- Real-time chat with OpenAI streaming (SSE)
+- Chat history persistence
+- File upload and management with OpenAI Files API
+- Professional light/dark mode UI
+- Responsive design
+- Next.js frontend with TypeScript
 
 ## Setup Instructions
 
@@ -71,7 +58,6 @@ This platform allows users to:
 - Python 3.11+
 - Node.js 18+
 - PostgreSQL 14+
-- OpenAI API key
 
 ### Backend Setup
 
@@ -161,8 +147,4 @@ This platform allows users to:
 - Projects can have system prompts that apply to all agents within
 - Agents can have their own prompts
 - Combined prompts are sent to OpenAI to maintain context
-- Agents in projects can optionally share conversation context
-
-## License
-
-MIT
+- Projects can optionally have shared conversation context for all agents in the same project
