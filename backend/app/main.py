@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
-from app.api.v1 import auth, users, projects, prompts
+from app.api.v1 import auth, users, projects, prompts, chat
 
 app = FastAPI(
     title="Chatbot Platform API",
@@ -23,6 +23,7 @@ app.include_router(auth.router, prefix="/api/v1/auth", tags=["Authentication"])
 app.include_router(users.router, prefix="/api/v1/users", tags=["Users"])
 app.include_router(projects.router, prefix="/api/v1/projects", tags=["Projects"])
 app.include_router(prompts.router, prefix="/api/v1/prompts", tags=["Prompts"])
+app.include_router(chat.router, prefix="/api/v1/chat", tags=["Chat"])
 
 @app.get("/")
 async def root():
