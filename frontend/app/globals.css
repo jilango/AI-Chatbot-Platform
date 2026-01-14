@@ -1,71 +1,67 @@
 @import "tailwindcss";
 
-:root,
-:root.light {
-  /* Light mode - Clean and professional with depth */
-  --background: #f5f5f5;
-  --foreground: #1a1a1a;
-  --primary: #0066ff;
-  --primary-hover: #0052cc;
+:root {
+  /* Light mode - Professional and easy on the eyes */
+  --background: #fafafa;
+  --foreground: #18181b;
+  --primary: #2563eb;
+  --primary-hover: #1d4ed8;
   --secondary: #6366f1;
-  --accent: #ff6b35;
-  --muted: #e8e8e8;
-  --muted-foreground: #6b6b6b;
-  --border: #c8c8c8;
+  --accent: #f59e0b;
+  --muted: #f4f4f5;
+  --muted-foreground: #71717a;
+  --border: #e4e4e7;
   --input: #ffffff;
-  --ring: #0066ff;
+  --ring: #2563eb;
   --card: #ffffff;
-  --card-foreground: #1a1a1a;
+  --card-foreground: #18181b;
   --popover: #ffffff;
-  --popover-foreground: #1a1a1a;
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --popover-foreground: #18181b;
 }
 
-:root.dark {
-  /* Dark mode - Warm grays with visible grey borders */
-  --background: #1a1a1a;
-  --foreground: #e8e8e8;
-  --primary: #3b9eff;
-  --primary-hover: #66b3ff;
-  --secondary: #9d7ff5;
-  --accent: #ff8c42;
-  --muted: #2a2a2a;
-  --muted-foreground: #9a9a9a;
-  --border: #404040;
-  --input: #242424;
-  --ring: #3b9eff;
-  --card: #232323;
-  --card-foreground: #e8e8e8;
-  --popover: #282828;
-  --popover-foreground: #e8e8e8;
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
-  --shadow: 0 2px 4px 0 rgb(0 0 0 / 0.4), 0 1px 2px -1px rgb(0 0 0 / 0.3);
-  --shadow-md: 0 4px 8px -1px rgb(0 0 0 / 0.5), 0 2px 4px -2px rgb(0 0 0 / 0.4);
-  --shadow-lg: 0 10px 20px -3px rgb(0 0 0 / 0.6), 0 4px 8px -4px rgb(0 0 0 / 0.5);
+.dark {
+  /* Dark mode - Very soft, comfortable colors inspired by modern IDEs */
+  --background: #0f0f0f;
+  --foreground: #ededed;
+  --primary: #3b82f6;
+  --primary-hover: #60a5fa;
+  --secondary: #8b5cf6;
+  --accent: #f59e0b;
+  --muted: #1c1c1c;
+  --muted-foreground: #a1a1aa;
+  --border: #2a2a2a;
+  --input: #1a1a1a;
+  --ring: #3b82f6;
+  --card: #161616;
+  --card-foreground: #ededed;
+  --popover: #1a1a1a;
+  --popover-foreground: #ededed;
+}
+
+* {
+  border-color: var(--border);
 }
 
 body {
   background-color: var(--background);
   color: var(--foreground);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-/* Custom scrollbar - modern and subtle */
+/* Custom scrollbar - adapts to theme */
 ::-webkit-scrollbar {
-  width: 12px;
-  height: 12px;
+  width: 10px;
+  height: 10px;
 }
 
 ::-webkit-scrollbar-track {
-  background-color: var(--muted);
+  background-color: var(--background);
 }
 
 ::-webkit-scrollbar-thumb {
   background-color: var(--muted-foreground);
-  border-radius: 6px;
-  border: 3px solid var(--muted);
+  border-radius: 9999px;
+  border: 2px solid var(--background);
 }
 
 ::-webkit-scrollbar-thumb:hover {
@@ -74,27 +70,7 @@ body {
 
 /* Smooth transitions for theme changes */
 * {
-  transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-/* Only transition color for elements without explicit color classes */
-:where(:not([class*="text-"])) {
-  transition: color 0.2s ease;
-}
-
-/* Utility classes for shadows */
-.shadow-custom {
-  box-shadow: var(--shadow);
-}
-
-.shadow-custom-sm {
-  box-shadow: var(--shadow-sm);
-}
-
-.shadow-custom-md {
-  box-shadow: var(--shadow-md);
-}
-
-.shadow-custom-lg {
-  box-shadow: var(--shadow-lg);
+  transition-property: background-color, border-color, color;
+  transition-duration: 0.2s;
+  transition-timing-function: ease;
 }

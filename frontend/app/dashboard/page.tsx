@@ -62,26 +62,26 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="bg-card backdrop-blur-sm border-b border-border sticky top-0 z-10 shadow-custom-sm">
+      <header className="bg-card/80 backdrop-blur-sm border-b border-border sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-primary to-primary-hover rounded-xl flex items-center justify-center shadow-custom-md">
-                <svg className="w-6 h-6 text-white stroke-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg">
+                <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                 </svg>
               </div>
-              <h1 className="text-xl font-bold text-foreground">Chatbot Platform</h1>
+              <h1 className="text-xl font-bold">Chatbot Platform</h1>
             </div>
             <div className="flex items-center gap-3">
-              <div className="hidden sm:flex items-center gap-2 px-3 py-2 bg-muted rounded-lg shadow-custom-sm">
-                <div className="w-2 h-2 bg-green-500 rounded-full shadow-sm"></div>
-                <span className="text-sm text-foreground font-medium">{user?.name}</span>
+              <div className="hidden sm:flex items-center gap-2 px-3 py-2 bg-card rounded-lg border border-border">
+                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                <span className="text-sm text-muted-foreground">{user?.name}</span>
               </div>
               <ThemeToggle />
               <button
                 onClick={logout}
-                className="flex items-center gap-2 px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-all shadow-custom-sm hover:shadow-custom"
+                className="flex items-center gap-2 px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-all"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
@@ -102,9 +102,9 @@ export default function DashboardPage() {
           </div>
           <button
             onClick={() => setShowNewProject(true)}
-            className="flex items-center justify-center gap-2 px-6 py-3 bg-primary hover:bg-primary-hover rounded-lg font-semibold text-white [&>svg]:text-white transition-all hover:scale-[1.02] active:scale-[0.98] shadow-custom-md hover:shadow-custom-lg"
+            className="flex items-center justify-center gap-2 px-6 py-3 bg-primary hover:bg-primary-hover rounded-lg font-medium text-white transition-all hover:scale-105 active:scale-95 shadow-sm"
           >
-            <svg className="w-5 h-5 stroke-current" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
             </svg>
             New Project
@@ -113,8 +113,8 @@ export default function DashboardPage() {
 
         {/* New Project Modal */}
         {showNewProject && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
-            <div className="bg-popover rounded-2xl p-8 border border-border max-w-md w-full shadow-custom-lg animate-in zoom-in-95 duration-200">
+          <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+            <div className="bg-popover rounded-2xl p-8 border border-border max-w-md w-full shadow-2xl animate-in zoom-in-95 duration-200">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-2xl font-bold">Create New Project</h3>
                 <button
@@ -158,14 +158,14 @@ export default function DashboardPage() {
                   <button
                     type="button"
                     onClick={() => setShowNewProject(false)}
-                    className="flex-1 px-4 py-3 bg-muted hover:bg-card border border-border rounded-lg font-medium transition-all shadow-custom-sm hover:shadow-custom"
+                    className="flex-1 px-4 py-3 bg-muted hover:bg-muted/80 border border-border rounded-lg font-medium transition-all"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={!newProjectName.trim()}
-                    className="flex-1 px-4 py-3 bg-primary hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed rounded-lg font-semibold text-white transition-all shadow-custom-md hover:shadow-custom-lg"
+                    className="flex-1 px-4 py-3 bg-primary hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed rounded-lg font-medium text-white transition-all shadow-sm"
                   >
                     Create Project
                   </button>
@@ -179,7 +179,7 @@ export default function DashboardPage() {
         {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div key={i} className="bg-card rounded-xl p-6 border border-border shadow-custom-sm animate-pulse">
+              <div key={i} className="bg-card rounded-xl p-6 border border-border animate-pulse">
                 <div className="flex items-start justify-between mb-4">
                   <div className="h-6 bg-muted rounded w-3/4"></div>
                   <div className="w-8 h-8 bg-muted rounded-lg"></div>
@@ -208,7 +208,7 @@ export default function DashboardPage() {
             </p>
             <button
               onClick={() => setShowNewProject(true)}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-primary hover:bg-primary-hover rounded-lg font-semibold text-white transition-all hover:scale-[1.02] active:scale-[0.98] shadow-custom-md hover:shadow-custom-lg"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-primary hover:bg-primary-hover rounded-lg font-medium text-white transition-all hover:scale-105 active:scale-95 shadow-sm"
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -222,11 +222,11 @@ export default function DashboardPage() {
               <button
                 key={project.id}
                 onClick={() => handleProjectClick(project.id)}
-                className="group bg-card hover:bg-muted rounded-xl p-6 border border-border hover:border-primary/40 transition-all text-left relative overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300 shadow-custom-sm hover:shadow-custom-md"
+                className="group bg-card hover:bg-muted rounded-xl p-6 border border-border hover:border-primary/50 transition-all text-left relative overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300"
                 style={{ animationDelay: `${index * 50}ms` }}
               >
                 {/* Gradient Overlay on Hover */}
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/0 group-hover:from-primary/[0.03] transition-all duration-300"></div>
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/0 group-hover:from-primary/5 transition-all duration-300"></div>
                 
                 <div className="relative">
                   <div className="flex items-start justify-between mb-4">
