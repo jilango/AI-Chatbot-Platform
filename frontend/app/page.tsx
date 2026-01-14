@@ -28,10 +28,13 @@ export default function Home() {
   }, [isAuthenticated, isChecking, router]);
 
   return (
-    <div className="min-h-screen bg-dark-bg flex items-center justify-center">
+    <div className="min-h-screen bg-background flex items-center justify-center">
       <div className="text-center">
-        <div className="w-16 h-16 border-4 border-brand-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-        <p className="text-gray-400">Loading...</p>
+        <div className="relative w-20 h-20 mx-auto mb-6">
+          <div className="absolute inset-0 border-4 border-primary/20 rounded-full"></div>
+          <div className="absolute inset-0 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+        </div>
+        <p className="text-muted-foreground">Loading...</p>
       </div>
     </div>
   );

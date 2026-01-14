@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useChatStore } from '@/store/chatStore';
 import MessageBubble from './MessageBubble';
 import TypingIndicator from './TypingIndicator';
@@ -11,9 +12,11 @@ import api from '@/lib/api';
 interface ChatInterfaceProps {
   projectId: string;
   projectName: string;
+  projectDescription?: string;
 }
 
-export default function ChatInterface({ projectId, projectName }: ChatInterfaceProps) {
+export default function ChatInterface({ projectId, projectName, projectDescription }: ChatInterfaceProps) {
+  const router = useRouter();
   const {
     messages,
     isStreaming,
@@ -71,65 +74,168 @@ export default function ChatInterface({ projectId, projectName }: ChatInterfaceP
     });
   };
 
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
+
   const handleClearChat = async () => {
-    if (confirm('Are you sure you want to clear all messages?')) {
-      try {
-        await api.delete(`/api/v1/chat/${projectId}/clear`);
-        clearMessages();
-      } catch (error) {
-        console.error('Failed to clear chat:', error);
-      }
+    try {
+      await api.delete(`/api/v1/chat/${projectId}/clear`);
+      clearMessages();
+      setShowClearConfirm(false);
+    } catch (error) {
+      console.error('Failed to clear chat:', error);
+      setError('Failed to clear chat. Please try again.');
     }
   };
 
+  const handleBack = () => {
+    router.push('/dashboard');
+  };
+
   return (
-    <div className="flex flex-col h-screen bg-dark-bg">
+    <div className="flex flex-col h-screen bg-background">
       {/* Header */}
-      <header className="bg-dark-surface border-b border-dark-border px-6 py-4 flex justify-between items-center">
-        <div>
-          <h1 className="text-xl font-semibold">{projectName}</h1>
-          <p className="text-sm text-gray-400">Chat with your AI assistant</p>
+      <header className="bg-card/80 backdrop-blur-sm border-b border-border sticky top-0 z-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            {/* Left: Back Button + Project Info */}
+            <div className="flex items-center gap-4">
+              <button
+                onClick={handleBack}
+                className="flex items-center gap-2 px-3 py-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-all group"
+                aria-label="Back to dashboard"
+              >
+                <svg className="w-5 h-5 transition-transform group-hover:-translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+                <span className="font-medium">Back</span>
+              </button>
+              <div className="h-8 w-px bg-border"></div>
+              <div>
+                <h1 className="text-lg font-semibold">{projectName}</h1>
+                {projectDescription && (
+                  <p className="text-xs text-muted-foreground line-clamp-1">{projectDescription}</p>
+                )}
+              </div>
+            </div>
+
+            {/* Right: Actions */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowClearConfirm(true)}
+                disabled={messages.length === 0}
+                className="flex items-center gap-2 px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted border border-border rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                aria-label="Clear chat history"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                <span className="hidden sm:inline">Clear Chat</span>
+              </button>
+            </div>
+          </div>
         </div>
-        <button
-          onClick={handleClearChat}
-          className="px-4 py-2 text-sm text-gray-400 hover:text-white border border-dark-border hover:border-gray-500 rounded-lg transition-colors"
-        >
-          Clear Chat
-        </button>
       </header>
 
-      {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto px-6 py-6">
-        <div className="max-w-4xl mx-auto">
-          {messages.length === 0 && !isStreaming && (
-            <div className="text-center py-16">
-              <div className="w-16 h-16 bg-yellow-500 rounded-full mx-auto mb-4 flex items-center justify-center text-2xl font-bold">
-                AI
+      {/* Clear Confirmation Modal */}
+      {showClearConfirm && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+          <div className="bg-popover rounded-2xl p-6 border border-border max-w-md w-full shadow-2xl animate-in zoom-in-95 duration-200">
+            <div className="flex items-start gap-4">
+              <div className="flex-shrink-0 w-12 h-12 bg-accent/10 rounded-full flex items-center justify-center">
+                <svg className="w-6 h-6 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
               </div>
-              <h2 className="text-2xl font-bold mb-2">Start a Conversation</h2>
-              <p className="text-gray-400">Send a message to begin chatting with your AI assistant</p>
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold mb-2">Clear chat history?</h3>
+                <p className="text-sm text-muted-foreground mb-6">
+                  This will permanently delete all messages in this conversation. This action cannot be undone.
+                </p>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setShowClearConfirm(false)}
+                    className="flex-1 px-4 py-2.5 bg-muted hover:bg-muted/80 border border-border rounded-lg font-medium transition-all"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleClearChat}
+                    className="flex-1 px-4 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-lg font-medium transition-all"
+                  >
+                    Clear All
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Messages Area */}
+      <div className="flex-1 overflow-y-auto">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {messages.length === 0 && !isStreaming && (
+            <div className="text-center py-20">
+              <div className="relative w-20 h-20 mx-auto mb-6">
+                <div className="absolute inset-0 bg-primary/20 rounded-2xl rotate-6 blur-xl"></div>
+                <div className="relative w-20 h-20 bg-primary rounded-2xl flex items-center justify-center shadow-lg">
+                  <svg className="w-10 h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                  </svg>
+                </div>
+              </div>
+              <h2 className="text-3xl font-bold mb-3">Ready to help</h2>
+              <p className="text-muted-foreground mb-8 max-w-md mx-auto">
+                Ask me anything! I'm here to assist you with your questions and tasks.
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-2xl mx-auto">
+                {[
+                  { icon: '💡', text: 'Explain a concept', prompt: 'Can you explain how...' },
+                  { icon: '🔍', text: 'Get information', prompt: 'Tell me about...' },
+                  { icon: '✍️', text: 'Write something', prompt: 'Help me write...' },
+                  { icon: '🤔', text: 'Solve a problem', prompt: 'How do I...' },
+                ].map((suggestion, i) => (
+                  <button
+                    key={i}
+                    className="p-4 bg-card hover:bg-muted border border-border rounded-xl text-left transition-all group"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl">{suggestion.icon}</span>
+                      <div>
+                        <div className="font-medium group-hover:text-primary transition-colors">
+                          {suggestion.text}
+                        </div>
+                        <div className="text-xs text-muted-foreground">{suggestion.prompt}</div>
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
             </div>
           )}
 
-          {messages.map((message) => (
+          {messages.map((message, index) => (
             <MessageBubble
               key={message.id}
               role={message.role}
               content={message.content}
               timestamp={message.created_at}
+              isLatest={index === messages.length - 1}
             />
           ))}
 
           {isStreaming && (
             <>
               {streamingMessage && (
-                <div className="flex justify-start mb-4">
-                  <div className="flex gap-3 max-w-[80%]">
-                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-yellow-500 flex items-center justify-center text-sm font-bold">
-                      AI
+                <div className="flex justify-start mb-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
+                  <div className="flex gap-3 max-w-[85%]">
+                    <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary flex items-center justify-center shadow-lg">
+                      <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                      </svg>
                     </div>
-                    <div className="px-4 py-3 rounded-2xl bg-dark-card border border-dark-border">
-                      <div className="prose prose-invert prose-sm max-w-none">
+                    <div className="flex-1 px-5 py-4 rounded-2xl bg-card border border-border shadow-sm">
+                      <div className="prose prose-invert prose-sm max-w-none dark:prose-invert">
                         {streamingMessage}
                       </div>
                     </div>

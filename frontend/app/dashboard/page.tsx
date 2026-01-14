@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
+import ThemeToggle from '@/components/ThemeToggle';
 import api from '@/lib/api';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -55,82 +56,118 @@ export default function DashboardPage() {
   };
 
   const handleProjectClick = (projectId: string) => {
-    router.push(`/chat/${projectId}`);
+    router.push(`/dashboard/chat/${projectId}`);
   };
 
   return (
-    <div className="min-h-screen bg-dark-bg">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="bg-dark-surface border-b border-dark-border">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold">Chatbot Platform</h1>
-          <div className="flex items-center gap-4">
-            <span className="text-gray-400">{user?.name}</span>
-            <button
-              onClick={logout}
-              className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors"
-            >
-              Logout
-            </button>
+      <header className="bg-card/80 backdrop-blur-sm border-b border-border sticky top-0 z-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg">
+                <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                </svg>
+              </div>
+              <h1 className="text-xl font-bold">Chatbot Platform</h1>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="hidden sm:flex items-center gap-2 px-3 py-2 bg-card rounded-lg border border-border">
+                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                <span className="text-sm text-muted-foreground">{user?.name}</span>
+              </div>
+              <ThemeToggle />
+              <button
+                onClick={logout}
+                className="flex items-center gap-2 px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-all"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+                <span className="hidden sm:inline">Logout</span>
+              </button>
+            </div>
           </div>
         </div>
       </header>
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-8">
           <div>
             <h2 className="text-3xl font-bold mb-2">Your Projects</h2>
-            <p className="text-gray-400">Select a project to start chatting</p>
+            <p className="text-muted-foreground">Select a project to start chatting with AI</p>
           </div>
           <button
             onClick={() => setShowNewProject(true)}
-            className="px-6 py-3 bg-brand-primary hover:bg-blue-600 rounded-lg font-medium transition-colors"
+            className="flex items-center justify-center gap-2 px-6 py-3 bg-primary hover:bg-primary-hover rounded-lg font-medium text-white transition-all hover:scale-105 active:scale-95 shadow-sm"
           >
-            + New Project
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            New Project
           </button>
         </div>
 
         {/* New Project Modal */}
         {showNewProject && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-dark-card rounded-2xl p-8 border border-dark-border max-w-md w-full">
-              <h3 className="text-2xl font-bold mb-6">Create New Project</h3>
-              <form onSubmit={handleCreateProject} className="space-y-4">
+          <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+            <div className="bg-popover rounded-2xl p-8 border border-border max-w-md w-full shadow-2xl animate-in zoom-in-95 duration-200">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-2xl font-bold">Create New Project</h3>
+                <button
+                  onClick={() => setShowNewProject(false)}
+                  className="p-2 hover:bg-muted rounded-lg transition-colors"
+                  aria-label="Close"
+                >
+                  <svg className="w-5 h-5 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <form onSubmit={handleCreateProject} className="space-y-5">
                 <div>
-                  <label className="block text-sm font-medium mb-2">Project Name</label>
+                  <label className="block text-sm font-medium mb-2">
+                    Project Name <span className="text-red-500">*</span>
+                  </label>
                   <input
                     type="text"
                     value={newProjectName}
                     onChange={(e) => setNewProjectName(e.target.value)}
                     required
-                    className="w-full px-4 py-3 bg-dark-surface border border-dark-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-primary"
-                    placeholder="My Chatbot"
+                    autoFocus
+                    className="w-full px-4 py-3 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all"
+                    placeholder="My AI Assistant"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2">Description</label>
+                  <label className="block text-sm font-medium mb-2">
+                    Description <span className="text-muted-foreground text-xs">(optional)</span>
+                  </label>
                   <textarea
                     value={newProjectDesc}
                     onChange={(e) => setNewProjectDesc(e.target.value)}
                     rows={3}
-                    className="w-full px-4 py-3 bg-dark-surface border border-dark-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-primary resize-none"
-                    placeholder="Describe your chatbot..."
+                    className="w-full px-4 py-3 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent resize-none transition-all"
+                    placeholder="A helpful AI assistant for..."
                   />
                 </div>
-                <div className="flex gap-3 pt-4">
+                <div className="flex gap-3 pt-2">
                   <button
                     type="button"
                     onClick={() => setShowNewProject(false)}
-                    className="flex-1 px-4 py-3 bg-dark-surface hover:bg-dark-hover border border-dark-border rounded-lg transition-colors"
+                    className="flex-1 px-4 py-3 bg-muted hover:bg-muted/80 border border-border rounded-lg font-medium transition-all"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="flex-1 px-4 py-3 bg-brand-primary hover:bg-blue-600 rounded-lg font-medium transition-colors"
+                    disabled={!newProjectName.trim()}
+                    className="flex-1 px-4 py-3 bg-primary hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed rounded-lg font-medium text-white transition-all shadow-sm"
                   >
-                    Create
+                    Create Project
                   </button>
                 </div>
               </form>
@@ -141,41 +178,81 @@ export default function DashboardPage() {
         {/* Projects Grid */}
         {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="bg-dark-card rounded-xl p-6 border border-dark-border animate-pulse">
-                <div className="h-6 bg-dark-surface rounded mb-4"></div>
-                <div className="h-4 bg-dark-surface rounded mb-2"></div>
-                <div className="h-4 bg-dark-surface rounded w-2/3"></div>
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div key={i} className="bg-card rounded-xl p-6 border border-border animate-pulse">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="h-6 bg-muted rounded w-3/4"></div>
+                  <div className="w-8 h-8 bg-muted rounded-lg"></div>
+                </div>
+                <div className="space-y-2 mb-4">
+                  <div className="h-4 bg-muted rounded"></div>
+                  <div className="h-4 bg-muted rounded w-2/3"></div>
+                </div>
+                <div className="h-3 bg-muted rounded w-1/2"></div>
               </div>
             ))}
           </div>
         ) : projects.length === 0 ? (
-          <div className="text-center py-16">
-            <p className="text-gray-400 text-lg mb-4">No projects yet</p>
+          <div className="text-center py-20">
+            <div className="relative w-24 h-24 mx-auto mb-6">
+              <div className="absolute inset-0 bg-primary/20 rounded-3xl rotate-6 blur-xl"></div>
+              <div className="relative w-24 h-24 bg-card border-2 border-dashed border-border rounded-2xl flex items-center justify-center">
+                <svg className="w-12 h-12 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+            </div>
+            <h3 className="text-2xl font-bold mb-2">No projects yet</h3>
+            <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+              Get started by creating your first AI project. It only takes a few seconds!
+            </p>
             <button
               onClick={() => setShowNewProject(true)}
-              className="px-6 py-3 bg-brand-primary hover:bg-blue-600 rounded-lg font-medium transition-colors"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-primary hover:bg-primary-hover rounded-lg font-medium text-white transition-all hover:scale-105 active:scale-95 shadow-sm"
             >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
               Create Your First Project
             </button>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {projects.map((project) => (
+            {projects.map((project, index) => (
               <button
                 key={project.id}
                 onClick={() => handleProjectClick(project.id)}
-                className="bg-dark-card hover:bg-dark-hover rounded-xl p-6 border border-dark-border transition-all text-left group"
+                className="group bg-card hover:bg-muted rounded-xl p-6 border border-border hover:border-primary/50 transition-all text-left relative overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300"
+                style={{ animationDelay: `${index * 50}ms` }}
               >
-                <h3 className="text-xl font-semibold mb-2 group-hover:text-brand-primary transition-colors">
-                  {project.name}
-                </h3>
-                <p className="text-gray-400 text-sm mb-4 line-clamp-2">
-                  {project.description || 'No description'}
-                </p>
-                <p className="text-xs text-gray-500">
-                  Updated {formatDistanceToNow(new Date(project.updated_at), { addSuffix: true })}
-                </p>
+                {/* Gradient Overlay on Hover */}
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/0 group-hover:from-primary/5 transition-all duration-300"></div>
+                
+                <div className="relative">
+                  <div className="flex items-start justify-between mb-4">
+                    <h3 className="text-xl font-semibold group-hover:text-primary transition-colors flex-1 line-clamp-1">
+                      {project.name}
+                    </h3>
+                    <div className="flex-shrink-0 ml-3 w-10 h-10 bg-muted group-hover:bg-primary/10 rounded-lg flex items-center justify-center transition-all">
+                      <svg className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                      </svg>
+                    </div>
+                  </div>
+                  
+                  <p className="text-muted-foreground text-sm mb-4 line-clamp-2 min-h-[40px]">
+                    {project.description || 'No description provided'}
+                  </p>
+                  
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs text-muted-foreground">
+                      Updated {formatDistanceToNow(new Date(project.updated_at), { addSuffix: true })}
+                    </p>
+                    <svg className="w-5 h-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </div>
+                </div>
               </button>
             ))}
           </div>
