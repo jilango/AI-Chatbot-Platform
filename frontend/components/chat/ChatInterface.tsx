@@ -35,6 +35,7 @@ export default function ChatInterface({ chatType, chatId }: ChatInterfaceProps) 
   const { tempChats, loadTempChat } = useTempChatStore();
 
   const [chatInfo, setChatInfo] = useState<{ name: string; description?: string } | null>(null);
+  const [agentProjectId, setAgentProjectId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const eventSourceRef = useRef<EventSource | null>(null);
@@ -47,9 +48,11 @@ export default function ChatInterface({ chatType, chatId }: ChatInterfaceProps) 
         if (chatType === 'agent') {
           const agent = await loadAgent(chatId);
           setChatInfo({ name: agent.name, description: agent.description });
+          setAgentProjectId(agent.project_id || null);
         } else {
           await loadTempChat(chatId);
           setChatInfo({ name: 'Temporary Chat', description: 'This conversation will be deleted when you leave' });
+          setAgentProjectId(null);
         }
       } catch (error) {
         console.error('Failed to load chat info:', error);
@@ -97,51 +100,61 @@ export default function ChatInterface({ chatType, chatId }: ChatInterfaceProps) 
       return;
     }
 
-    // Prepare query params
-    const params = new URLSearchParams();
+    // Build URL based on chat type
+    // Note: EventSource doesn't support custom headers, so we pass token as query param
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+    let url: string;
+    
     if (chatType === 'agent') {
-      params.append('agent_id', chatId);
+      url = `${baseUrl}/api/v1/chat/agent/${chatId}/stream?message=${encodeURIComponent(content)}&token=${token}`;
     } else {
-      params.append('temp_chat_id', chatId);
+      url = `${baseUrl}/api/v1/chat/temp/${chatId}/stream?message=${encodeURIComponent(content)}&token=${token}`;
     }
-    params.append('message', content);
 
     // Create SSE connection
-    const url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/v1/chat/stream?${params.toString()}`;
-    const eventSource = new EventSource(url, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-    } as any);
+    const eventSource = new EventSource(url);
 
     eventSourceRef.current = eventSource;
 
     eventSource.onmessage = (event) => {
       try {
+        console.log('SSE event received:', event.data);
         const data = JSON.parse(event.data);
+        console.log('Parsed SSE data:', data);
         
         if (data.type === 'token') {
+          console.log('Appending chunk:', data.content);
           appendStreamingChunk(data.content);
         } else if (data.type === 'done') {
+          console.log('Stream complete');
           completeStreaming();
           eventSource.close();
           eventSourceRef.current = null;
         } else if (data.type === 'error') {
+          console.error('SSE error:', data.content);
           setError(data.content || 'An error occurred');
           setStreaming(false);
           eventSource.close();
           eventSourceRef.current = null;
+        } else {
+          console.warn('Unknown SSE message type:', data);
         }
       } catch (err) {
-        console.error('Failed to parse SSE message:', err);
+        console.error('Failed to parse SSE message:', err, 'Raw data:', event.data);
       }
     };
 
-    eventSource.onerror = () => {
+    eventSource.onerror = (error) => {
+      console.error('EventSource error:', error);
+      console.error('EventSource readyState:', eventSource.readyState);
       setError('Connection error. Please try again.');
       setStreaming(false);
       eventSource.close();
       eventSourceRef.current = null;
+    };
+    
+    eventSource.onopen = () => {
+      console.log('EventSource connection opened');
     };
   };
 
@@ -167,10 +180,9 @@ export default function ChatInterface({ chatType, chatId }: ChatInterfaceProps) 
       // For temp chats, go back to dashboard
       router.push('/dashboard');
     } else {
-      // For agents, find the agent and go back to project or dashboard
-      const agent = agents.find(a => a.id === chatId);
-      if (agent?.project_id) {
-        router.push(`/dashboard/projects/${agent.project_id}`);
+      // For agents, go back to project page if agent belongs to a project, otherwise dashboard
+      if (agentProjectId) {
+        router.push(`/dashboard/projects/${agentProjectId}`);
       } else {
         router.push('/dashboard');
       }
@@ -302,7 +314,7 @@ export default function ChatInterface({ chatType, chatId }: ChatInterfaceProps) 
               <p className="text-muted-foreground mb-8 max-w-md mx-auto">
                 {chatType === 'temp' 
                   ? 'Start a temporary conversation. This chat will be deleted when you leave.'
-                  : 'Ask me anything! I'm here to assist you with your questions and tasks.'}
+                  : 'Ask me anything! I\'m here to assist you with your questions and tasks.'}
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-2xl mx-auto">
                 {[

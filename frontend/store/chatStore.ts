@@ -35,13 +35,15 @@ export const useChatStore = create<ChatState>((set, get) => ({
   loadHistory: async (params: { agent_id?: string; temp_chat_id?: string }) => {
     set({ isLoading: true, error: null, messages: [] });
     try {
-      const queryParams = new URLSearchParams();
+      let url: string;
       if (params.agent_id) {
-        queryParams.append('agent_id', params.agent_id);
+        url = `/api/v1/chat/agent/${params.agent_id}/history`;
       } else if (params.temp_chat_id) {
-        queryParams.append('temp_chat_id', params.temp_chat_id);
+        url = `/api/v1/chat/temp/${params.temp_chat_id}/history`;
+      } else {
+        throw new Error('No agent or temp chat ID provided');
       }
-      const response = await api.get(`/api/v1/chat/history?${queryParams.toString()}`);
+      const response = await api.get(url);
       set({ messages: response.data.messages, isLoading: false });
     } catch (error: any) {
       set({ error: 'Failed to load chat history', isLoading: false });
@@ -59,11 +61,16 @@ export const useChatStore = create<ChatState>((set, get) => ({
   },
 
   appendStreamingChunk: (chunk: string) => {
-    set((state) => ({ streamingMessage: state.streamingMessage + chunk }));
+    set((state) => {
+      const newMessage = (state.streamingMessage || '') + chunk;
+      console.log('Appending chunk, new message length:', newMessage.length);
+      return { streamingMessage: newMessage };
+    });
   },
 
   completeStreaming: () => {
     const { streamingMessage, messages } = get();
+    console.log('Completing stream, message length:', streamingMessage?.length || 0);
     if (streamingMessage) {
       const assistantMessage: Message = {
         id: Date.now().toString(),
@@ -76,6 +83,10 @@ export const useChatStore = create<ChatState>((set, get) => ({
         streamingMessage: '',
         isStreaming: false,
       });
+      console.log('Message saved to history');
+    } else {
+      console.warn('No streaming message to save');
+      set({ isStreaming: false });
     }
   },
 

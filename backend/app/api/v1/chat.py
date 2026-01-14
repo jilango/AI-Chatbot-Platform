@@ -57,7 +57,7 @@ async def create_sse_generator(
         full_response = ""
         async for chunk in stream_openai_response(messages):
             full_response += chunk
-            data = json.dumps({"content": chunk, "done": False})
+            data = json.dumps({"type": "token", "content": chunk})
             yield f"data: {data}\n\n"
             await asyncio.sleep(0.01)  # Small delay for smooth streaming
         
@@ -71,11 +71,11 @@ async def create_sse_generator(
         )
         
         # Send done signal
-        data = json.dumps({"content": "", "done": True})
+        data = json.dumps({"type": "done"})
         yield f"data: {data}\n\n"
         
     except Exception as e:
-        error_data = json.dumps({"error": str(e), "done": True})
+        error_data = json.dumps({"type": "error", "content": str(e)})
         yield f"data: {error_data}\n\n"
 
 
@@ -83,10 +83,26 @@ async def create_sse_generator(
 async def stream_agent_chat(
     agent_id: UUID,
     message: str = Query(..., min_length=1),
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    token: str = Query(...),  # Token passed as query param for SSE
+    db: Session = Depends(get_db)
 ):
     """Stream chat response for an agent"""
+    # Manually verify token since SSE doesn't support headers
+    from app.core.security import decode_access_token
+    from app.models.user import User as UserModel
+    
+    try:
+        payload = decode_access_token(token)
+        user_id = payload.get("sub")
+        if not user_id:
+            raise HTTPException(status_code=401, detail="Invalid token")
+        
+        current_user = db.query(UserModel).filter(UserModel.id == user_id).first()
+        if not current_user:
+            raise HTTPException(status_code=401, detail="User not found")
+    except Exception:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+    
     # Verify agent ownership
     agent = db.query(Agent).filter(
         Agent.id == agent_id,
@@ -116,10 +132,26 @@ async def stream_agent_chat(
 async def stream_temp_chat(
     temp_chat_id: UUID,
     message: str = Query(..., min_length=1),
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    token: str = Query(...),  # Token passed as query param for SSE
+    db: Session = Depends(get_db)
 ):
     """Stream chat response for a temporary chat"""
+    # Manually verify token since SSE doesn't support headers
+    from app.core.security import decode_access_token
+    from app.models.user import User as UserModel
+    
+    try:
+        payload = decode_access_token(token)
+        user_id = payload.get("sub")
+        if not user_id:
+            raise HTTPException(status_code=401, detail="Invalid token")
+        
+        current_user = db.query(UserModel).filter(UserModel.id == user_id).first()
+        if not current_user:
+            raise HTTPException(status_code=401, detail="User not found")
+    except Exception:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+    
     # Verify temp chat ownership
     temp_chat = db.query(TemporaryChat).filter(
         TemporaryChat.id == temp_chat_id,
