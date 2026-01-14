@@ -83,7 +83,7 @@ export default function MessageBubble({ role, content, timestamp, isLatest }: Me
             {!isUser && (
               <button
                 onClick={handleCopy}
-                className="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 p-2 bg-card hover:bg-muted border border-border rounded-lg shadow-lg transition-all duration-200"
+                className="absolute top-2 -right-12 opacity-0 group-hover:opacity-100 p-2 bg-card hover:bg-muted border border-border rounded-lg shadow-lg transition-all duration-200"
                 title="Copy message"
               >
                 {isCopied ? (
