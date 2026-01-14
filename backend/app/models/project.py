@@ -24,3 +24,4 @@ class Project(Base):
     # Relationships
     user = relationship("User", back_populates="projects")
     agents = relationship("Agent", back_populates="project", cascade="all, delete-orphan")
+    files = relationship("ProjectFile", back_populates="project", cascade="all, delete-orphan")

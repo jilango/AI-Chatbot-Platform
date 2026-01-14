@@ -1,12 +1,14 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useProjectStore } from '@/store/projectStore';
 import { useAgentStore } from '@/store/agentStore';
 import ThemeToggle from '@/components/ThemeToggle';
 import CreateAgentModal from '@/components/modals/CreateAgentModal';
 import AgentCard from '@/components/dashboard/AgentCard';
+import FileUpload, { FileUploadHandle } from '@/components/files/FileUpload';
+import FileList from '@/components/files/FileList';
 
 export default function ProjectPage() {
   const router = useRouter();
@@ -17,6 +19,8 @@ export default function ProjectPage() {
   const { projectAgents, loadProjectAgents, createAgent, isLoading } = useAgentStore();
   const [showNewAgent, setShowNewAgent] = useState(false);
   const [showProjectSettings, setShowProjectSettings] = useState(false);
+  const [showFiles, setShowFiles] = useState(false);
+  const fileUploadRef = useRef<FileUploadHandle>(null);
 
   useEffect(() => {
     if (projectId) {
@@ -176,7 +180,7 @@ export default function ProjectPage() {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-6">
+        <div className="mb-6 flex items-center gap-4 flex-wrap">
           <button
             onClick={() => setShowNewAgent(true)}
             className="flex items-center gap-3 px-6 py-3 bg-primary hover:bg-primary-hover text-white rounded-lg transition-all shadow-sm"
@@ -186,7 +190,51 @@ export default function ProjectPage() {
             </svg>
             Add Agent to Project
           </button>
+          <button
+            onClick={() => {
+              setShowFiles(true);
+              // Trigger file input after section is visible
+              setTimeout(() => {
+                fileUploadRef.current?.triggerUpload();
+              }, 100);
+            }}
+            className="flex items-center gap-3 px-6 py-3 bg-primary hover:bg-primary-hover text-white rounded-lg transition-all shadow-sm"
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+            </svg>
+            Upload File
+          </button>
+          <button
+            onClick={() => setShowFiles(!showFiles)}
+            className="flex items-center gap-3 px-6 py-3 bg-card hover:bg-muted border border-border rounded-lg transition-all"
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            {showFiles ? 'Hide' : 'Show'} Files
+          </button>
         </div>
+
+        {/* Files Section */}
+        {showFiles && (
+          <div className="mb-8 bg-card rounded-xl border border-border p-6">
+            <h2 className="text-lg font-semibold mb-4">Project Files</h2>
+            <div className="space-y-6">
+              <FileUpload 
+                ref={fileUploadRef}
+                projectId={projectId}
+                onUploadComplete={() => {
+                  // FileList will automatically reload via useEffect
+                }}
+              />
+              <div>
+                <h3 className="text-sm font-medium mb-3">Uploaded Files</h3>
+                <FileList projectId={projectId} />
+              </div>
+            </div>
+          </div>
+        )}
 
         {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

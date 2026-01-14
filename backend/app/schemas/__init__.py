@@ -29,6 +29,10 @@ from app.schemas.chat import (
     ChatHistoryResponse,
     StreamChunk,
 )
+from app.schemas.project_file import (
+    ProjectFileResponse,
+    ProjectFileUploadResponse,
+)
 
 __all__ = [
     # User schemas
@@ -57,4 +61,7 @@ __all__ = [
     "ChatMessageResponse",
     "ChatHistoryResponse",
     "StreamChunk",
+    # Project file schemas
+    "ProjectFileResponse",
+    "ProjectFileUploadResponse",
 ]

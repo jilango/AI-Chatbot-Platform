@@ -8,6 +8,8 @@ import { useTempChatStore } from '@/store/tempChatStore';
 import MessageBubble from './MessageBubble';
 import TypingIndicator from './TypingIndicator';
 import ChatInput from './ChatInput';
+import FileUpload, { FileUploadHandle } from '@/components/files/FileUpload';
+import FileList from '@/components/files/FileList';
 import { getToken } from '@/lib/auth';
 import api from '@/lib/api';
 
@@ -37,8 +39,10 @@ export default function ChatInterface({ chatType, chatId }: ChatInterfaceProps) 
   const [chatInfo, setChatInfo] = useState<{ name: string; description?: string } | null>(null);
   const [agentProjectId, setAgentProjectId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [showFiles, setShowFiles] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const eventSourceRef = useRef<EventSource | null>(null);
+  const fileUploadRef = useRef<FileUploadHandle>(null);
 
   // Load chat info
   useEffect(() => {
@@ -246,6 +250,35 @@ export default function ChatInterface({ chatType, chatId }: ChatInterfaceProps) 
 
             {/* Right: Actions */}
             <div className="flex items-center gap-2">
+              {chatType === 'agent' && agentProjectId && (
+                <>
+                  <button
+                    onClick={() => {
+                      setShowFiles(true);
+                      setTimeout(() => {
+                        fileUploadRef.current?.triggerUpload();
+                      }, 100);
+                    }}
+                    className="flex items-center gap-2 px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted border border-border rounded-lg transition-all"
+                    aria-label="Upload file"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                    </svg>
+                    <span className="hidden sm:inline">Upload File</span>
+                  </button>
+                  <button
+                    onClick={() => setShowFiles(!showFiles)}
+                    className="flex items-center gap-2 px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted border border-border rounded-lg transition-all"
+                    aria-label="Toggle files"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <span className="hidden sm:inline">{showFiles ? 'Hide' : 'Show'} Files</span>
+                  </button>
+                </>
+              )}
               <button
                 onClick={() => setShowClearConfirm(true)}
                 disabled={messages.length === 0}
@@ -291,6 +324,28 @@ export default function ChatInterface({ chatType, chatId }: ChatInterfaceProps) 
                     Clear All
                   </button>
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Files Section */}
+      {chatType === 'agent' && agentProjectId && showFiles && (
+        <div className="bg-card border-b border-border">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold">Project Files</h3>
+              <FileUpload 
+                ref={fileUploadRef}
+                projectId={agentProjectId}
+                onUploadComplete={() => {
+                  // FileList will automatically reload via useEffect
+                }}
+              />
+              <div>
+                <h4 className="text-xs font-medium mb-2 text-muted-foreground">Uploaded Files</h4>
+                <FileList projectId={agentProjectId} />
               </div>
             </div>
           </div>
