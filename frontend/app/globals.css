@@ -45,7 +45,7 @@
 body {
   background-color: var(--background);
   color: var(--foreground);
-  transition: background-color 0.3s ease, color 0.3s ease;
+  transition: background-color 0.1s ease, color 0.1s ease;
 }
 
 /* Custom scrollbar - adapts to theme */
@@ -71,6 +71,6 @@ body {
 /* Smooth transitions for theme changes */
 * {
   transition-property: background-color, border-color, color;
-  transition-duration: 0.2s;
+  transition-duration: 0.1s;
   transition-timing-function: ease;
 }
