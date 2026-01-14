@@ -1,204 +1,251 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
-from typing import Optional
+from typing import AsyncGenerator, List
 from uuid import UUID
 import json
 import asyncio
 
 from app.database import get_db
+from app.models import User, Agent, TemporaryChat, MessageRole
+from app.schemas.chat import ChatMessageCreate, ChatMessageResponse, ChatHistoryResponse
 from app.api.deps import get_current_user
-from app.models.user import User
-from app.schemas.chat import (
-    ChatMessageCreate,
-    ChatMessageResponse,
-    ChatHistoryResponse,
-    ClearChatResponse
-)
-from app.services.chat_service import chat_service
+from app.services.context_manager import ContextManager
+from app.services.chat_service import stream_openai_response
 
 router = APIRouter()
 
-@router.post("/{project_id}/messages", response_model=ChatMessageResponse, status_code=status.HTTP_201_CREATED)
-async def send_message(
-    project_id: UUID,
-    message_data: ChatMessageCreate,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    """
-    Send a user message and get AI response (non-streaming)
-    Note: For better UX, use the /stream endpoint instead
-    """
+
+async def create_sse_generator(
+    context_manager: ContextManager,
+    agent_id: UUID = None,
+    temp_chat_id: UUID = None,
+    user_id: UUID = None,
+    message: str = ""
+) -> AsyncGenerator[str, None]:
+    """Generate SSE stream for chat responses"""
     try:
-        # Get project context
-        context = await chat_service.get_project_context(
-            db=db,
-            project_id=project_id,
-            user_id=current_user.id
-        )
+        # Get chat history
+        if agent_id:
+            history = context_manager.get_agent_history(agent_id, limit=20)
+        else:
+            history = context_manager.get_temp_chat_history(temp_chat_id, limit=20)
+        
+        # Convert history to message format
+        messages = [
+            {"role": msg.role.value, "content": msg.content}
+            for msg in history
+        ]
+        
+        # Add current user message
+        messages.append({"role": "user", "content": message})
+        
+        # Format with context if agent
+        if agent_id:
+            messages = context_manager.format_context_for_llm(agent_id, messages)
         
         # Save user message
-        user_message = chat_service.save_message(
-            db=db,
-            project_id=project_id,
-            user_id=current_user.id,
-            role="user",
-            content=message_data.content
+        context_manager.save_message(
+            user_id=user_id,
+            role=MessageRole.USER,
+            content=message,
+            agent_id=agent_id,
+            temp_chat_id=temp_chat_id
         )
         
-        # Add user message to context
-        context["messages"].append({
-            "role": "user",
-            "content": message_data.content
-        })
-        
-        # Get AI response (collect all chunks)
-        assistant_response = ""
-        async for chunk in chat_service.stream_chat_response(context["messages"]):
-            assistant_response += chunk
+        # Stream AI response
+        full_response = ""
+        async for chunk in stream_openai_response(messages):
+            full_response += chunk
+            data = json.dumps({"content": chunk, "done": False})
+            yield f"data: {data}\n\n"
+            await asyncio.sleep(0.01)  # Small delay for smooth streaming
         
         # Save assistant message
-        assistant_message = chat_service.save_message(
-            db=db,
-            project_id=project_id,
-            user_id=current_user.id,
-            role="assistant",
-            content=assistant_response
+        context_manager.save_message(
+            user_id=user_id,
+            role=MessageRole.ASSISTANT,
+            content=full_response,
+            agent_id=agent_id,
+            temp_chat_id=temp_chat_id
         )
         
-        return assistant_message
+        # Send done signal
+        data = json.dumps({"content": "", "done": True})
+        yield f"data: {data}\n\n"
         
-    except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+        error_data = json.dumps({"error": str(e), "done": True})
+        yield f"data: {error_data}\n\n"
 
-@router.get("/{project_id}/stream")
-async def stream_chat(
-    project_id: UUID,
-    message: str = Query(..., min_length=1, max_length=10000),
+
+@router.get("/agent/{agent_id}/stream")
+async def stream_agent_chat(
+    agent_id: UUID,
+    message: str = Query(..., min_length=1),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """
-    Stream AI response using Server-Sent Events (SSE)
-    """
-    try:
-        # Get project context
-        context = await chat_service.get_project_context(
-            db=db,
-            project_id=project_id,
-            user_id=current_user.id
+    """Stream chat response for an agent"""
+    # Verify agent ownership
+    agent = db.query(Agent).filter(
+        Agent.id == agent_id,
+        Agent.user_id == current_user.id
+    ).first()
+    
+    if not agent:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Agent not found"
         )
-        
-        # Save user message
-        user_message = chat_service.save_message(
-            db=db,
-            project_id=project_id,
+    
+    context_manager = ContextManager(db)
+    
+    return StreamingResponse(
+        create_sse_generator(
+            context_manager=context_manager,
+            agent_id=agent_id,
             user_id=current_user.id,
-            role="user",
-            content=message
-        )
-        
-        # Add user message to context
-        context["messages"].append({
-            "role": "user",
-            "content": message
-        })
-        
-        # Create async generator for SSE
-        async def event_generator():
-            assistant_response = ""
-            
-            try:
-                # Stream chunks from OpenAI
-                async for chunk in chat_service.stream_chat_response(context["messages"]):
-                    assistant_response += chunk
-                    # Send chunk as SSE event
-                    yield f"data: {json.dumps({'content': chunk, 'done': False})}\n\n"
-                    await asyncio.sleep(0)  # Allow other tasks to run
-                
-                # Save complete assistant message
-                chat_service.save_message(
-                    db=db,
-                    project_id=project_id,
-                    user_id=current_user.id,
-                    role="assistant",
-                    content=assistant_response
-                )
-                
-                # Send completion event
-                yield f"data: {json.dumps({'content': '', 'done': True})}\n\n"
-                
-            except Exception as e:
-                # Send error event
-                yield f"data: {json.dumps({'error': str(e), 'done': True})}\n\n"
-        
-        return StreamingResponse(
-            event_generator(),
-            media_type="text/event-stream",
-            headers={
-                "Cache-Control": "no-cache",
-                "Connection": "keep-alive",
-                "X-Accel-Buffering": "no"  # Disable buffering in nginx
-            }
-        )
-        
-    except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
-    except Exception as e:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+            message=message
+        ),
+        media_type="text/event-stream"
+    )
 
-@router.get("/{project_id}/history", response_model=ChatHistoryResponse)
-def get_chat_history(
-    project_id: UUID,
-    page: int = Query(1, ge=1),
-    page_size: int = Query(50, ge=1, le=100),
+
+@router.get("/temp/{temp_chat_id}/stream")
+async def stream_temp_chat(
+    temp_chat_id: UUID,
+    message: str = Query(..., min_length=1),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """
-    Get paginated chat history for a project
-    """
-    try:
-        history = chat_service.get_chat_history(
-            db=db,
-            project_id=project_id,
-            user_id=current_user.id,
-            page=page,
-            page_size=page_size
+    """Stream chat response for a temporary chat"""
+    # Verify temp chat ownership
+    temp_chat = db.query(TemporaryChat).filter(
+        TemporaryChat.id == temp_chat_id,
+        TemporaryChat.user_id == current_user.id
+    ).first()
+    
+    if not temp_chat:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Temporary chat not found"
         )
-        
-        return ChatHistoryResponse(**history)
-        
-    except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
-    except Exception as e:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+    
+    context_manager = ContextManager(db)
+    
+    return StreamingResponse(
+        create_sse_generator(
+            context_manager=context_manager,
+            temp_chat_id=temp_chat_id,
+            user_id=current_user.id,
+            message=message
+        ),
+        media_type="text/event-stream"
+    )
 
-@router.delete("/{project_id}/clear", response_model=ClearChatResponse)
-def clear_chat(
-    project_id: UUID,
+
+@router.get("/agent/{agent_id}/history", response_model=ChatHistoryResponse)
+async def get_agent_history(
+    agent_id: UUID,
+    limit: int = Query(50, ge=1, le=100),
+    offset: int = Query(0, ge=0),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """
-    Clear all chat messages for a project
-    """
-    try:
-        deleted_count = chat_service.clear_chat_history(
-            db=db,
-            project_id=project_id,
-            user_id=current_user.id
+    """Get chat history for an agent"""
+    agent = db.query(Agent).filter(
+        Agent.id == agent_id,
+        Agent.user_id == current_user.id
+    ).first()
+    
+    if not agent:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Agent not found"
         )
-        
-        return ClearChatResponse(
-            message="Chat history cleared successfully",
-            deleted_count=deleted_count
+    
+    context_manager = ContextManager(db)
+    messages = context_manager.get_agent_history(agent_id, limit, offset)
+    
+    return ChatHistoryResponse(
+        messages=[ChatMessageResponse.from_orm(msg) for msg in messages],
+        total=len(messages)
+    )
+
+
+@router.get("/temp/{temp_chat_id}/history", response_model=ChatHistoryResponse)
+async def get_temp_chat_history(
+    temp_chat_id: UUID,
+    limit: int = Query(50, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Get chat history for a temporary chat"""
+    temp_chat = db.query(TemporaryChat).filter(
+        TemporaryChat.id == temp_chat_id,
+        TemporaryChat.user_id == current_user.id
+    ).first()
+    
+    if not temp_chat:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Temporary chat not found"
         )
-        
-    except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
-    except Exception as e:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+    
+    context_manager = ContextManager(db)
+    messages = context_manager.get_temp_chat_history(temp_chat_id, limit, offset)
+    
+    return ChatHistoryResponse(
+        messages=[ChatMessageResponse.from_orm(msg) for msg in messages],
+        total=len(messages)
+    )
+
+
+@router.delete("/agent/{agent_id}/clear", status_code=status.HTTP_204_NO_CONTENT)
+async def clear_agent_chat(
+    agent_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Clear all messages for an agent"""
+    agent = db.query(Agent).filter(
+        Agent.id == agent_id,
+        Agent.user_id == current_user.id
+    ).first()
+    
+    if not agent:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Agent not found"
+        )
+    
+    context_manager = ContextManager(db)
+    context_manager.clear_agent_history(agent_id)
+    
+    return None
+
+
+@router.delete("/temp/{temp_chat_id}/clear", status_code=status.HTTP_204_NO_CONTENT)
+async def clear_temp_chat(
+    temp_chat_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Clear all messages for a temporary chat"""
+    temp_chat = db.query(TemporaryChat).filter(
+        TemporaryChat.id == temp_chat_id,
+        TemporaryChat.user_id == current_user.id
+    ).first()
+    
+    if not temp_chat:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Temporary chat not found"
+        )
+    
+    context_manager = ContextManager(db)
+    context_manager.clear_temp_chat_history(temp_chat_id)
+    
+    return None

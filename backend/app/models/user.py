@@ -17,3 +17,6 @@ class User(Base):
     
     # Relationships
     projects = relationship("Project", back_populates="user", cascade="all, delete-orphan")
+    agents = relationship("Agent", back_populates="user", cascade="all, delete-orphan")
+    temporary_chats = relationship("TemporaryChat", back_populates="user", cascade="all, delete-orphan")
+    chat_messages = relationship("ChatMessage", back_populates="user", cascade="all, delete-orphan")

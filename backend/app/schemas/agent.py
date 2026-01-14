@@ -2,34 +2,35 @@ from pydantic import BaseModel, Field
 from datetime import datetime
 from typing import Optional
 from uuid import UUID
+from app.models.agent import AgentType
 
 
-class ProjectBase(BaseModel):
+class AgentBase(BaseModel):
     name: str = Field(..., min_length=1, max_length=255)
     description: Optional[str] = None
+    agent_type: AgentType
+    project_id: Optional[UUID] = None
     has_prompt: bool = False
     prompt_content: Optional[str] = None
-    enable_context_sharing: bool = True
 
 
-class ProjectCreate(ProjectBase):
+class AgentCreate(AgentBase):
     pass
 
 
-class ProjectUpdate(BaseModel):
+class AgentUpdate(BaseModel):
     name: Optional[str] = Field(None, min_length=1, max_length=255)
     description: Optional[str] = None
     has_prompt: Optional[bool] = None
     prompt_content: Optional[str] = None
-    enable_context_sharing: Optional[bool] = None
 
 
-class ProjectResponse(ProjectBase):
+class AgentResponse(AgentBase):
     id: UUID
     user_id: UUID
     created_at: datetime
     updated_at: datetime
-    agent_count: Optional[int] = 0
+    project_name: Optional[str] = None
 
     class Config:
         from_attributes = True

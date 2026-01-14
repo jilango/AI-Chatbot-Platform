@@ -5,7 +5,6 @@ from sqlalchemy import desc
 from openai import AsyncOpenAI
 from app.config import settings
 from app.models.chat_message import ChatMessage
-from app.models.prompt import Prompt
 from app.models.project import Project
 import logging
 
@@ -236,3 +235,9 @@ class ChatService:
 
 # Create a singleton instance
 chat_service = ChatService()
+
+# Alias for backward compatibility
+async def stream_openai_response(messages: List[Dict[str, str]], model: str = "gpt-4o-mini") -> AsyncGenerator[str, None]:
+    """Alias for chat_service.stream_chat_response"""
+    async for chunk in chat_service.stream_chat_response(messages, model):
+        yield chunk

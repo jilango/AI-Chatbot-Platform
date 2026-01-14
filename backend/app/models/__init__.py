@@ -1,7 +1,15 @@
 from app.models.user import User
 from app.models.project import Project
-from app.models.prompt import Prompt
-from app.models.chat_message import ChatMessage
-from app.models.project_file import ProjectFile
+from app.models.agent import Agent, AgentType
+from app.models.temporary_chat import TemporaryChat
+from app.models.chat_message import ChatMessage, MessageRole
 
-__all__ = ["User", "Project", "Prompt", "ChatMessage", "ProjectFile"]
+__all__ = [
+    "User",
+    "Project",
+    "Agent",
+    "AgentType",
+    "TemporaryChat",
+    "ChatMessage",
+    "MessageRole",
+]

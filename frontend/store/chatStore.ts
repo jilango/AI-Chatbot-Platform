@@ -10,15 +10,13 @@ interface Message {
 
 interface ChatState {
   messages: Message[];
-  currentProjectId: string | null;
   isLoading: boolean;
   isStreaming: boolean;
   error: string | null;
   streamingMessage: string;
   
   // Actions
-  setCurrentProject: (projectId: string) => void;
-  loadHistory: (projectId: string) => Promise<void>;
+  loadHistory: (params: { agent_id?: string; temp_chat_id?: string }) => Promise<void>;
   addUserMessage: (content: string) => void;
   appendStreamingChunk: (chunk: string) => void;
   completeStreaming: () => void;
@@ -29,20 +27,21 @@ interface ChatState {
 
 export const useChatStore = create<ChatState>((set, get) => ({
   messages: [],
-  currentProjectId: null,
   isLoading: false,
   isStreaming: false,
   error: null,
   streamingMessage: '',
 
-  setCurrentProject: (projectId: string) => {
-    set({ currentProjectId: projectId, messages: [], streamingMessage: '' });
-  },
-
-  loadHistory: async (projectId: string) => {
-    set({ isLoading: true, error: null });
+  loadHistory: async (params: { agent_id?: string; temp_chat_id?: string }) => {
+    set({ isLoading: true, error: null, messages: [] });
     try {
-      const response = await api.get(`/api/v1/chat/${projectId}/history`);
+      const queryParams = new URLSearchParams();
+      if (params.agent_id) {
+        queryParams.append('agent_id', params.agent_id);
+      } else if (params.temp_chat_id) {
+        queryParams.append('temp_chat_id', params.temp_chat_id);
+      }
+      const response = await api.get(`/api/v1/chat/history?${queryParams.toString()}`);
       set({ messages: response.data.messages, isLoading: false });
     } catch (error: any) {
       set({ error: 'Failed to load chat history', isLoading: false });

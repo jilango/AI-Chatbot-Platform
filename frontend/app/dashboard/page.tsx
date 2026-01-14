@@ -3,60 +3,53 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
+import { useProjectStore } from '@/store/projectStore';
+import { useAgentStore } from '@/store/agentStore';
+import { useTempChatStore } from '@/store/tempChatStore';
 import ThemeToggle from '@/components/ThemeToggle';
-import api from '@/lib/api';
-import { formatDistanceToNow } from 'date-fns';
-
-interface Project {
-  id: string;
-  name: string;
-  description: string;
-  created_at: string;
-  updated_at: string;
-}
+import ProjectCard from '@/components/dashboard/ProjectCard';
+import AgentCard from '@/components/dashboard/AgentCard';
+import CreateProjectModal from '@/components/modals/CreateProjectModal';
+import CreateAgentModal from '@/components/modals/CreateAgentModal';
 
 export default function DashboardPage() {
   const router = useRouter();
   const { user, logout } = useAuthStore();
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { projects, loadProjects, createProject, isLoading: projectsLoading } = useProjectStore();
+  const { standaloneAgents, loadStandaloneAgents, createAgent, isLoading: agentsLoading } = useAgentStore();
+  const { createTempChat } = useTempChatStore();
+  
   const [showNewProject, setShowNewProject] = useState(false);
-  const [newProjectName, setNewProjectName] = useState('');
-  const [newProjectDesc, setNewProjectDesc] = useState('');
+  const [showNewAgent, setShowNewAgent] = useState(false);
 
   useEffect(() => {
     loadProjects();
-  }, []);
+    loadStandaloneAgents();
+  }, [loadProjects, loadStandaloneAgents]);
 
-  const loadProjects = async () => {
-    try {
-      const response = await api.get('/api/v1/projects');
-      setProjects(response.data);
-    } catch (error) {
-      console.error('Failed to load projects:', error);
-    } finally {
-      setIsLoading(false);
-    }
+  const handleCreateProject = async (data: any) => {
+    const project = await createProject(data);
+    // Optionally navigate to project
+    // router.push(`/dashboard/projects/${project.id}`);
   };
 
-  const handleCreateProject = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      await api.post('/api/v1/projects', {
-        name: newProjectName,
-        description: newProjectDesc,
-      });
-      setNewProjectName('');
-      setNewProjectDesc('');
-      setShowNewProject(false);
-      loadProjects();
-    } catch (error) {
-      console.error('Failed to create project:', error);
-    }
+  const handleCreateAgent = async (data: any) => {
+    await createAgent(data);
   };
 
   const handleProjectClick = (projectId: string) => {
-    router.push(`/dashboard/chat/${projectId}`);
+    router.push(`/dashboard/projects/${projectId}`);
+  };
+
+  const handleAgentClick = (agentId: string) => {
+    router.push(`/dashboard/agents/${agentId}`);
+  };
+
+  const handleQuickChat = async () => {
+    // Generate a session ID
+    const sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const tempChat = await createTempChat(sessionId);
+    router.push(`/dashboard/temp/${tempChat.id}`);
   };
 
   return (
@@ -95,169 +88,162 @@ export default function DashboardPage() {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-8">
-          <div>
-            <h2 className="text-3xl font-bold mb-2">Your Projects</h2>
-            <p className="text-muted-foreground">Select a project to start chatting with AI</p>
-          </div>
+        {/* Quick Actions */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
           <button
             onClick={() => setShowNewProject(true)}
-            className="flex items-center justify-center gap-2 px-6 py-3 bg-primary hover:bg-primary-hover rounded-lg font-medium text-white transition-all hover:scale-105 active:scale-95 shadow-sm"
+            className="flex items-center gap-4 p-6 bg-card hover:bg-muted border border-border rounded-xl transition-all group"
           >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-            New Project
+            <div className="w-12 h-12 bg-primary/10 group-hover:bg-primary/20 rounded-lg flex items-center justify-center transition-colors">
+              <svg className="w-6 h-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+            </div>
+            <div className="text-left">
+              <div className="font-semibold">New Project</div>
+              <div className="text-sm text-muted-foreground">Create a folder for agents</div>
+            </div>
+          </button>
+
+          <button
+            onClick={() => setShowNewAgent(true)}
+            className="flex items-center gap-4 p-6 bg-card hover:bg-muted border border-border rounded-xl transition-all group"
+          >
+            <div className="w-12 h-12 bg-primary/10 group-hover:bg-primary/20 rounded-lg flex items-center justify-center transition-colors">
+              <svg className="w-6 h-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+            </div>
+            <div className="text-left">
+              <div className="font-semibold">New Agent</div>
+              <div className="text-sm text-muted-foreground">Create standalone AI</div>
+            </div>
+          </button>
+
+          <button
+            onClick={handleQuickChat}
+            className="flex items-center gap-4 p-6 bg-card hover:bg-muted border border-border rounded-xl transition-all group"
+          >
+            <div className="w-12 h-12 bg-accent/10 group-hover:bg-accent/20 rounded-lg flex items-center justify-center transition-colors">
+              <svg className="w-6 h-6 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+              </svg>
+            </div>
+            <div className="text-left">
+              <div className="font-semibold">Quick Chat</div>
+              <div className="text-sm text-muted-foreground">Temporary conversation</div>
+            </div>
           </button>
         </div>
 
-        {/* New Project Modal */}
-        {showNewProject && (
-          <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
-            <div className="bg-popover rounded-2xl p-8 border border-border max-w-md w-full shadow-2xl animate-in zoom-in-95 duration-200">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-2xl font-bold">Create New Project</h3>
-                <button
-                  onClick={() => setShowNewProject(false)}
-                  className="p-2 hover:bg-muted rounded-lg transition-colors"
-                  aria-label="Close"
-                >
-                  <svg className="w-5 h-5 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-              <form onSubmit={handleCreateProject} className="space-y-5">
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Project Name <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={newProjectName}
-                    onChange={(e) => setNewProjectName(e.target.value)}
-                    required
-                    autoFocus
-                    className="w-full px-4 py-3 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all"
-                    placeholder="My AI Assistant"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Description <span className="text-muted-foreground text-xs">(optional)</span>
-                  </label>
-                  <textarea
-                    value={newProjectDesc}
-                    onChange={(e) => setNewProjectDesc(e.target.value)}
-                    rows={3}
-                    className="w-full px-4 py-3 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent resize-none transition-all"
-                    placeholder="A helpful AI assistant for..."
-                  />
-                </div>
-                <div className="flex gap-3 pt-2">
-                  <button
-                    type="button"
-                    onClick={() => setShowNewProject(false)}
-                    className="flex-1 px-4 py-3 bg-muted hover:bg-muted/80 border border-border rounded-lg font-medium transition-all"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={!newProjectName.trim()}
-                    className="flex-1 px-4 py-3 bg-primary hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed rounded-lg font-medium text-white transition-all shadow-sm"
-                  >
-                    Create Project
-                  </button>
-                </div>
-              </form>
+        {/* Projects Section */}
+        <div className="mb-12">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-2xl font-bold">Your Projects</h2>
+              <p className="text-muted-foreground text-sm">Folders containing multiple agents</p>
             </div>
           </div>
-        )}
 
-        {/* Projects Grid */}
-        {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div key={i} className="bg-card rounded-xl p-6 border border-border animate-pulse">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="h-6 bg-muted rounded w-3/4"></div>
-                  <div className="w-8 h-8 bg-muted rounded-lg"></div>
-                </div>
-                <div className="space-y-2 mb-4">
-                  <div className="h-4 bg-muted rounded"></div>
+          {projectsLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="bg-card rounded-xl p-6 border border-border animate-pulse">
+                  <div className="h-6 bg-muted rounded w-3/4 mb-4"></div>
+                  <div className="h-4 bg-muted rounded mb-2"></div>
                   <div className="h-4 bg-muted rounded w-2/3"></div>
                 </div>
-                <div className="h-3 bg-muted rounded w-1/2"></div>
-              </div>
-            ))}
-          </div>
-        ) : projects.length === 0 ? (
-          <div className="text-center py-20">
-            <div className="relative w-24 h-24 mx-auto mb-6">
-              <div className="absolute inset-0 bg-primary/20 rounded-3xl rotate-6 blur-xl"></div>
-              <div className="relative w-24 h-24 bg-card border-2 border-dashed border-border rounded-2xl flex items-center justify-center">
-                <svg className="w-12 h-12 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              ))}
+            </div>
+          ) : projects.length === 0 ? (
+            <div className="text-center py-12 bg-card rounded-xl border border-border border-dashed">
+              <div className="w-16 h-16 bg-muted rounded-full mx-auto mb-4 flex items-center justify-center">
+                <svg className="w-8 h-8 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
                 </svg>
               </div>
-            </div>
-            <h3 className="text-2xl font-bold mb-2">No projects yet</h3>
-            <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-              Get started by creating your first AI project. It only takes a few seconds!
-            </p>
-            <button
-              onClick={() => setShowNewProject(true)}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-primary hover:bg-primary-hover rounded-lg font-medium text-white transition-all hover:scale-105 active:scale-95 shadow-sm"
-            >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
-              Create Your First Project
-            </button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {projects.map((project, index) => (
+              <p className="text-muted-foreground mb-4">No projects yet</p>
               <button
-                key={project.id}
-                onClick={() => handleProjectClick(project.id)}
-                className="group bg-card hover:bg-muted rounded-xl p-6 border border-border hover:border-primary/50 transition-all text-left relative overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300"
-                style={{ animationDelay: `${index * 50}ms` }}
+                onClick={() => setShowNewProject(true)}
+                className="text-primary hover:underline text-sm font-medium"
               >
-                {/* Gradient Overlay on Hover */}
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/0 group-hover:from-primary/5 transition-all duration-300"></div>
-                
-                <div className="relative">
-                  <div className="flex items-start justify-between mb-4">
-                    <h3 className="text-xl font-semibold group-hover:text-primary transition-colors flex-1 line-clamp-1">
-                      {project.name}
-                    </h3>
-                    <div className="flex-shrink-0 ml-3 w-10 h-10 bg-muted group-hover:bg-primary/10 rounded-lg flex items-center justify-center transition-all">
-                      <svg className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                      </svg>
-                    </div>
-                  </div>
-                  
-                  <p className="text-muted-foreground text-sm mb-4 line-clamp-2 min-h-[40px]">
-                    {project.description || 'No description provided'}
-                  </p>
-                  
-                  <div className="flex items-center justify-between">
-                    <p className="text-xs text-muted-foreground">
-                      Updated {formatDistanceToNow(new Date(project.updated_at), { addSuffix: true })}
-                    </p>
-                    <svg className="w-5 h-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </div>
-                </div>
+                Create your first project
               </button>
-            ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {projects.map((project, index) => (
+                <div key={project.id} style={{ animationDelay: `${index * 50}ms` }}>
+                  <ProjectCard
+                    project={project}
+                    onClick={() => handleProjectClick(project.id)}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Standalone Agents Section */}
+        <div>
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-2xl font-bold">Standalone Agents</h2>
+              <p className="text-muted-foreground text-sm">Independent AI assistants</p>
+            </div>
           </div>
-        )}
+
+          {agentsLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[1, 2].map((i) => (
+                <div key={i} className="bg-card rounded-xl p-6 border border-border animate-pulse">
+                  <div className="h-6 bg-muted rounded w-3/4 mb-4"></div>
+                  <div className="h-4 bg-muted rounded mb-2"></div>
+                  <div className="h-4 bg-muted rounded w-2/3"></div>
+                </div>
+              ))}
+            </div>
+          ) : standaloneAgents.length === 0 ? (
+            <div className="text-center py-12 bg-card rounded-xl border border-border border-dashed">
+              <div className="w-16 h-16 bg-muted rounded-full mx-auto mb-4 flex items-center justify-center">
+                <svg className="w-8 h-8 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                </svg>
+              </div>
+              <p className="text-muted-foreground mb-4">No standalone agents yet</p>
+              <button
+                onClick={() => setShowNewAgent(true)}
+                className="text-primary hover:underline text-sm font-medium"
+              >
+                Create your first agent
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {standaloneAgents.map((agent, index) => (
+                <div key={agent.id} style={{ animationDelay: `${index * 50}ms` }}>
+                  <AgentCard
+                    agent={agent}
+                    onClick={() => handleAgentClick(agent.id)}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </main>
+
+      {/* Modals */}
+      <CreateProjectModal
+        isOpen={showNewProject}
+        onClose={() => setShowNewProject(false)}
+        onSubmit={handleCreateProject}
+      />
+      <CreateAgentModal
+        isOpen={showNewAgent}
+        onClose={() => setShowNewAgent(false)}
+        onSubmit={handleCreateAgent}
+      />
     </div>
   );
 }

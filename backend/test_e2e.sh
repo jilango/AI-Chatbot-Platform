@@ -1,6 +1,14 @@
 #!/bin/bash
 # End-to-End Testing Script for Chatbot Platform
 # Tests Phases 2, 3, and 4 with real database
+# 
+# NOTE: This script needs to be updated for Phase 7 architecture:
+# - Projects are now folders containing agents
+# - Agents are the new chat entities (standalone or project-based)
+# - Temporary chats are now supported
+# - Context management with project and agent prompts
+#
+# TODO: Update this script to test the new Phase 7 endpoints
 
 set -e  # Exit on error
 

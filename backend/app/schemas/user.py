@@ -33,3 +33,9 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     user_id: Optional[UUID] = None
+
+class AuthResponse(BaseModel):
+    """Response for register/login with token and user data"""
+    access_token: str
+    token_type: str = "bearer"
+    user: UserResponse
