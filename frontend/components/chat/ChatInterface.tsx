@@ -51,7 +51,7 @@ export default function ChatInterface({ chatType, chatId }: ChatInterfaceProps) 
       try {
         if (chatType === 'agent') {
           const agent = await loadAgent(chatId);
-          setChatInfo({ name: agent.name, description: agent.description });
+          setChatInfo({ name: agent.name, description: agent.description ?? undefined });
           setAgentProjectId(agent.project_id || null);
         } else {
           await loadTempChat(chatId);
