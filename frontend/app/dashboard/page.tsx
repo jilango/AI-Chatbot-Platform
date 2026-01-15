@@ -59,8 +59,8 @@ export default function DashboardPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg">
-                <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="w-10 h-10 bg-muted dark:bg-primary rounded-xl flex items-center justify-center shadow-lg">
+                <svg className="w-6 h-6 text-muted-foreground dark:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                 </svg>
               </div>
@@ -102,10 +102,17 @@ export default function DashboardPage() {
           {projectsLoading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="bg-card rounded-xl p-6 border border-border animate-pulse">
-                  <div className="h-6 bg-muted rounded w-3/4 mb-4"></div>
+                <div key={i} className="bg-card rounded-xl p-6 border border-border animate-pulse min-h-[180px] w-full h-full">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="h-6 bg-muted rounded w-3/4"></div>
+                    <div className="w-10 h-10 bg-muted rounded-lg flex-shrink-0 ml-3"></div>
+                  </div>
                   <div className="h-4 bg-muted rounded mb-2"></div>
-                  <div className="h-4 bg-muted rounded w-2/3"></div>
+                  <div className="h-4 bg-muted rounded w-2/3 mb-4"></div>
+                  <div className="flex items-center justify-between">
+                    <div className="h-5 bg-muted rounded w-20"></div>
+                    <div className="h-4 bg-muted rounded w-24"></div>
+                  </div>
                 </div>
               ))}
             </div>
@@ -127,7 +134,7 @@ export default function DashboardPage() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {projects.map((project, index) => (
-                <div key={project.id} style={{ animationDelay: `${index * 50}ms` }}>
+                <div key={project.id} className="w-full h-full" style={{ animationDelay: `${index * 50}ms` }}>
                   <ProjectCard
                     project={project}
                     onClick={() => handleProjectClick(project.id)}
@@ -199,10 +206,17 @@ export default function DashboardPage() {
           {agentsLoading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[1, 2].map((i) => (
-                <div key={i} className="bg-card rounded-xl p-6 border border-border animate-pulse">
-                  <div className="h-6 bg-muted rounded w-3/4 mb-4"></div>
+                <div key={i} className="bg-card rounded-xl p-6 border border-border animate-pulse min-h-[180px] w-full h-full">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="h-6 bg-muted rounded w-3/4"></div>
+                    <div className="w-10 h-10 bg-muted rounded-lg flex-shrink-0 ml-3"></div>
+                  </div>
                   <div className="h-4 bg-muted rounded mb-2"></div>
-                  <div className="h-4 bg-muted rounded w-2/3"></div>
+                  <div className="h-4 bg-muted rounded w-2/3 mb-4"></div>
+                  <div className="flex items-center justify-between">
+                    <div className="h-5 bg-muted rounded w-20"></div>
+                    <div className="h-4 bg-muted rounded w-24"></div>
+                  </div>
                 </div>
               ))}
             </div>
@@ -224,7 +238,7 @@ export default function DashboardPage() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {standaloneAgents.map((agent, index) => (
-                <div key={agent.id} style={{ animationDelay: `${index * 50}ms` }}>
+                <div key={agent.id} className="w-full h-full" style={{ animationDelay: `${index * 50}ms` }}>
                   <AgentCard
                     agent={agent}
                     onClick={() => handleAgentClick(agent.id)}

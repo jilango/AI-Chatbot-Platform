@@ -10,12 +10,12 @@ export default function ProjectCard({ project, onClick }: ProjectCardProps) {
   return (
     <button
       onClick={onClick}
-      className="group bg-card hover:bg-muted rounded-xl p-6 border border-border hover:border-primary/50 transition-all text-left relative overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300"
+      className="group bg-card hover:bg-muted rounded-xl p-6 border border-border hover:border-primary/50 transition-all text-left relative overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300 min-h-[180px] w-full h-full flex flex-col"
     >
       {/* Gradient Overlay on Hover */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary/0 group-hover:from-primary/5 transition-all duration-300"></div>
       
-      <div className="relative">
+      <div className="relative flex flex-col flex-1 w-full">
         <div className="flex items-start justify-between mb-4">
           <h3 className="text-xl font-semibold group-hover:text-primary transition-colors flex-1 line-clamp-1">
             {project.name}
@@ -27,11 +27,11 @@ export default function ProjectCard({ project, onClick }: ProjectCardProps) {
           </div>
         </div>
         
-        <p className="text-muted-foreground text-sm mb-4 line-clamp-2 min-h-[40px]">
+        <p className="text-muted-foreground text-sm mb-4 line-clamp-2 min-h-[40px] flex-1">
           {project.description || 'No description provided'}
         </p>
         
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between mt-auto">
           <div className="flex items-center gap-2">
             <span className="text-xs text-muted-foreground">
               {project.agent_count} {project.agent_count === 1 ? 'agent' : 'agents'}

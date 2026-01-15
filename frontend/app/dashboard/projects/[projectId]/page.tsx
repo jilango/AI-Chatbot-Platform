@@ -183,7 +183,7 @@ export default function ProjectPage() {
         <div className="mb-6 flex items-center gap-4 flex-wrap">
           <button
             onClick={() => setShowNewAgent(true)}
-            className="flex items-center gap-3 px-6 py-3 bg-primary hover:bg-primary-hover text-white rounded-lg transition-all shadow-sm"
+            className="flex items-center gap-3 px-6 py-3 bg-primary hover:bg-primary-hover text-black dark:text-white rounded-lg transition-all shadow-sm"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -198,7 +198,7 @@ export default function ProjectPage() {
                 fileUploadRef.current?.triggerUpload();
               }, 100);
             }}
-            className="flex items-center gap-3 px-6 py-3 bg-primary hover:bg-primary-hover text-white rounded-lg transition-all shadow-sm"
+            className="flex items-center gap-3 px-6 py-3 bg-primary hover:bg-primary-hover text-black dark:text-white rounded-lg transition-all shadow-sm"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
@@ -239,10 +239,17 @@ export default function ProjectPage() {
         {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="bg-card rounded-xl p-6 border border-border animate-pulse">
-                <div className="h-6 bg-muted rounded w-3/4 mb-4"></div>
+              <div key={i} className="bg-card rounded-xl p-6 border border-border animate-pulse min-h-[180px] w-full h-full">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="h-6 bg-muted rounded w-3/4"></div>
+                  <div className="w-10 h-10 bg-muted rounded-lg flex-shrink-0 ml-3"></div>
+                </div>
                 <div className="h-4 bg-muted rounded mb-2"></div>
-                <div className="h-4 bg-muted rounded w-2/3"></div>
+                <div className="h-4 bg-muted rounded w-2/3 mb-4"></div>
+                <div className="flex items-center justify-between">
+                  <div className="h-5 bg-muted rounded w-20"></div>
+                  <div className="h-4 bg-muted rounded w-24"></div>
+                </div>
               </div>
             ))}
           </div>
@@ -264,7 +271,7 @@ export default function ProjectPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {projectAgents.map((agent, index) => (
-              <div key={agent.id} style={{ animationDelay: `${index * 50}ms` }}>
+              <div key={agent.id} className="w-full h-full" style={{ animationDelay: `${index * 50}ms` }}>
                 <AgentCard
                   agent={agent}
                   onClick={() => handleAgentClick(agent.id)}

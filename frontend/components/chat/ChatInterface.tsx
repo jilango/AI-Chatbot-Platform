@@ -234,7 +234,7 @@ export default function ChatInterface({ chatType, chatId }: ChatInterfaceProps) 
                   </div>
                 ) : (
                   <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center shadow-lg">
-                    <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg className="w-5 h-5 text-white dark:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                     </svg>
                   </div>
@@ -360,7 +360,7 @@ export default function ChatInterface({ chatType, chatId }: ChatInterfaceProps) 
               <div className="relative w-20 h-20 mx-auto mb-6">
                 <div className="absolute inset-0 bg-primary/20 rounded-2xl rotate-6 blur-xl"></div>
                 <div className={`relative w-20 h-20 ${chatType === 'temp' ? 'bg-accent' : 'bg-primary'} rounded-2xl flex items-center justify-center shadow-lg`}>
-                  <svg className="w-10 h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="w-10 h-10 text-white dark:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                   </svg>
                 </div>
@@ -413,7 +413,7 @@ export default function ChatInterface({ chatType, chatId }: ChatInterfaceProps) 
                 <div className="flex justify-start mb-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
                   <div className="flex gap-3 max-w-[85%]">
                     <div className={`flex-shrink-0 w-10 h-10 rounded-full ${chatType === 'temp' ? 'bg-accent' : 'bg-primary'} flex items-center justify-center shadow-lg`}>
-                      <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <svg className="w-5 h-5 text-white dark:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                       </svg>
                     </div>

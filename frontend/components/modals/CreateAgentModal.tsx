@@ -77,7 +77,7 @@ export default function CreateAgentModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+    <div className="fixed inset-0 bg-black dark:bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
       <div className="bg-popover rounded-2xl p-8 border border-border max-w-2xl w-full shadow-2xl animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-2xl font-bold">Create New Agent</h3>
@@ -221,7 +221,7 @@ export default function CreateAgentModal({
                 (agentType === 'project_agent' && !selectedProjectId) || 
                 isSubmitting
               }
-              className="flex-1 px-4 py-3 bg-primary hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed rounded-lg font-medium text-white transition-all shadow-sm"
+              className="flex-1 px-4 py-3 bg-primary hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed rounded-lg font-medium text-black dark:text-white transition-all shadow-sm"
             >
               {isSubmitting ? 'Creating...' : 'Create Agent'}
             </button>
