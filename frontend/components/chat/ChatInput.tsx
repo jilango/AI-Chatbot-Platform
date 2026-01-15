@@ -46,7 +46,7 @@ export default function ChatInput({ onSend, disabled }: ChatInputProps) {
     <div className="border-t border-border bg-card/80 backdrop-blur-sm sticky bottom-0">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         <div className={`relative transition-all duration-200 ${isFocused ? 'scale-[1.01]' : ''}`}>
-          <div className={`flex items-end gap-3 p-4 bg-input border-2 rounded-2xl transition-all ${
+          <div className={`flex items-center gap-3 p-4 bg-input border-2 rounded-2xl transition-all ${
             isFocused 
               ? 'border-ring shadow-lg' 
               : 'border-border'
@@ -61,7 +61,7 @@ export default function ChatInput({ onSend, disabled }: ChatInputProps) {
               disabled={disabled}
               placeholder="Type your message..."
               rows={1}
-              className="flex-1 bg-transparent border-none focus:outline-none resize-none disabled:opacity-50 disabled:cursor-not-allowed placeholder:text-muted-foreground text-[15px] leading-relaxed max-h-[200px]"
+              className="flex-1 bg-transparent border-none focus:outline-none resize-none disabled:opacity-50 disabled:cursor-not-allowed placeholder:text-muted-foreground text-[15px] leading-[1.5] py-0.5 max-h-[200px]"
             />
             <div className="flex items-center gap-2 flex-shrink-0">
               {showCharCount && (
@@ -74,7 +74,7 @@ export default function ChatInput({ onSend, disabled }: ChatInputProps) {
               <button
                 onClick={handleSubmit}
                 disabled={!message.trim() || disabled}
-                className={`p-3 rounded-xl font-medium transition-all flex items-center justify-center ${
+                className={`p-2.5 rounded-xl font-medium transition-all flex items-center justify-center flex-shrink-0 ${
                   !message.trim() || disabled
                     ? 'bg-muted text-muted-foreground cursor-not-allowed'
                     : 'bg-primary hover:bg-primary-hover text-black dark:text-white hover:scale-105 active:scale-95 shadow-sm'
