@@ -32,7 +32,8 @@ export function useTempChatCleanup(tempChatId: string | null) {
       // Use sendBeacon for reliable cleanup on page close
       const token = localStorage.getItem('token');
       if (token) {
-        const url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/v1/temporary-chats/${tempChatId}`;
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? '';
+        const url = `${baseUrl}/api/v1/temporary-chats/${tempChatId}`;
         
         // sendBeacon is more reliable for cleanup on page close
         // It doesn't guarantee delivery but has the best chance

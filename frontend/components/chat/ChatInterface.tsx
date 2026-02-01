@@ -142,8 +142,8 @@ export default function ChatInterface({ chatType, chatId }: ChatInterfaceProps) 
       eventSourceRef.current.close();
     }
 
-    // Auth via httpOnly cookie (sent automatically with same-site request)
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+    // Auth via httpOnly cookie (sent automatically with same-site request when using proxy)
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? '';
     const url =
       chatType === 'agent'
         ? `${baseUrl}/api/v1/chat/agent/${chatId}/stream?message=${encodeURIComponent(content)}`

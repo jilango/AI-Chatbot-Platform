@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+// Use '' for same-origin (proxy); set NEXT_PUBLIC_API_URL to backend URL for direct mode
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? '';
 
 // Create axios instance: auth via httpOnly cookie (withCredentials), no token in JS
 export const api = axios.create({
@@ -18,7 +19,8 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       const isLoginRequest = error.config?.url?.includes('/auth/login');
       const skipRedirect = (error.config as { skipAuthRedirect?: boolean })?.skipAuthRedirect;
-      if (!isLoginRequest && !skipRedirect) {
+      const alreadyOnLogin = typeof window !== 'undefined' && window.location.pathname === '/login';
+      if (!isLoginRequest && !skipRedirect && !alreadyOnLogin) {
         if (typeof window !== 'undefined') {
           localStorage.removeItem('user');
           localStorage.removeItem('auth-storage'); // clear persisted auth so login page doesn't rehydrate as "logged in"
