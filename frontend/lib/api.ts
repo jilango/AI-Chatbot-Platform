@@ -20,6 +20,7 @@ api.interceptors.response.use(
       if (!isLoginRequest) {
         if (typeof window !== 'undefined') {
           localStorage.removeItem('user');
+          localStorage.removeItem('auth-storage'); // clear persisted auth so login page doesn't rehydrate as "logged in"
           window.location.href = '/login';
         }
       }
