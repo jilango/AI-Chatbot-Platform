@@ -4,13 +4,16 @@ import { formatDistanceToNow } from 'date-fns';
 interface ProjectCardProps {
   project: Project;
   onClick: () => void;
+  style?: React.CSSProperties;
 }
 
-export default function ProjectCard({ project, onClick }: ProjectCardProps) {
+export default function ProjectCard({ project, onClick, style }: ProjectCardProps) {
   return (
     <button
       onClick={onClick}
+      style={style}
       className="group bg-card hover:bg-muted rounded-xl p-6 border border-border hover:border-primary/50 transition-all text-left relative overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300 min-h-[180px] w-full h-full flex flex-col"
+      aria-label={`Open project ${project.name}`}
     >
       {/* Gradient Overlay on Hover */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary/0 group-hover:from-primary/5 transition-all duration-300"></div>

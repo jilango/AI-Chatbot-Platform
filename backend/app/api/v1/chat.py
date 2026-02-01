@@ -1,7 +1,7 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, status, Query, Request
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
-from typing import AsyncGenerator, List
+from typing import AsyncGenerator, List, Optional
 from uuid import UUID
 import json
 import asyncio
@@ -10,6 +10,7 @@ from app.database import get_db
 from app.models import User, Agent, TemporaryChat, MessageRole
 from app.schemas.chat import ChatMessageCreate, ChatMessageResponse, ChatHistoryResponse
 from app.api.deps import get_current_user
+from app.config import settings
 from app.services.context_manager import ContextManager
 from app.services.chat_service import stream_openai_response
 
@@ -81,25 +82,31 @@ async def create_sse_generator(
 
 @router.get("/agent/{agent_id}/stream")
 async def stream_agent_chat(
+    request: Request,
     agent_id: UUID,
     message: str = Query(..., min_length=1),
-    token: str = Query(...),  # Token passed as query param for SSE
+    token: Optional[str] = Query(None),  # Optional: cookie is preferred
     db: Session = Depends(get_db)
 ):
-    """Stream chat response for an agent"""
-    # Manually verify token since SSE doesn't support headers
+    """Stream chat response for an agent (auth via cookie or query token)."""
     from app.core.security import decode_access_token
     from app.models.user import User as UserModel
-    
+
+    auth_token = token or request.cookies.get(settings.AUTH_COOKIE_NAME)
+    if not auth_token:
+        raise HTTPException(status_code=401, detail="Authentication required")
+
     try:
-        payload = decode_access_token(token)
+        payload = decode_access_token(auth_token)
         user_id = payload.get("sub")
         if not user_id:
             raise HTTPException(status_code=401, detail="Invalid token")
-        
+
         current_user = db.query(UserModel).filter(UserModel.id == user_id).first()
         if not current_user:
             raise HTTPException(status_code=401, detail="User not found")
+    except HTTPException:
+        raise
     except Exception:
         raise HTTPException(status_code=401, detail="Invalid or expired token")
     
@@ -130,25 +137,31 @@ async def stream_agent_chat(
 
 @router.get("/temp/{temp_chat_id}/stream")
 async def stream_temp_chat(
+    request: Request,
     temp_chat_id: UUID,
     message: str = Query(..., min_length=1),
-    token: str = Query(...),  # Token passed as query param for SSE
+    token: Optional[str] = Query(None),  # Optional: cookie is preferred
     db: Session = Depends(get_db)
 ):
-    """Stream chat response for a temporary chat"""
-    # Manually verify token since SSE doesn't support headers
+    """Stream chat response for a temporary chat (auth via cookie or query token)."""
     from app.core.security import decode_access_token
     from app.models.user import User as UserModel
-    
+
+    auth_token = token or request.cookies.get(settings.AUTH_COOKIE_NAME)
+    if not auth_token:
+        raise HTTPException(status_code=401, detail="Authentication required")
+
     try:
-        payload = decode_access_token(token)
+        payload = decode_access_token(auth_token)
         user_id = payload.get("sub")
         if not user_id:
             raise HTTPException(status_code=401, detail="Invalid token")
-        
+
         current_user = db.query(UserModel).filter(UserModel.id == user_id).first()
         if not current_user:
             raise HTTPException(status_code=401, detail="User not found")
+    except HTTPException:
+        raise
     except Exception:
         raise HTTPException(status_code=401, detail="Invalid or expired token")
     

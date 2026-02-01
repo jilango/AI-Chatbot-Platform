@@ -1,3 +1,5 @@
+import logging
+
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 from sqlalchemy.orm import Session
 from typing import List
@@ -7,10 +9,15 @@ from app.database import get_db
 from app.models import User, Project, ProjectFile
 from app.schemas.project_file import ProjectFileResponse, ProjectFileUploadResponse
 from app.api.deps import get_current_user
-from app.services.file_service import file_service
+from app.services.file_service import (
+    file_service,
+    sanitize_filename,
+    ALLOWED_EXTENSIONS,
+)
 from app.config import settings
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 @router.post("/project/{project_id}/upload", response_model=ProjectFileUploadResponse, status_code=status.HTTP_201_CREATED)
@@ -43,29 +50,43 @@ async def upload_file(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"File size exceeds maximum allowed size of {settings.MAX_FILE_SIZE / (1024 * 1024):.1f}MB"
         )
-    
+
+    # Sanitize filename and validate extension
+    raw_filename = file.filename or "untitled"
+    safe_filename = sanitize_filename(raw_filename)
+    if not safe_filename:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid filename",
+        )
+    if not file_service.is_allowed_extension(safe_filename):
+        allowed = ", ".join(sorted(ALLOWED_EXTENSIONS))
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"File type not allowed. Allowed types: {allowed}",
+        )
+
     # Upload to OpenAI
     try:
         openai_file_id = await file_service.upload_file(
             file_content=file_content,
-            filename=file.filename or "untitled",
+            filename=safe_filename,
             purpose="assistants"
         )
-    except Exception as e:
+    except Exception:
+        logger.exception("OpenAI file upload failed")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to upload file to OpenAI: {str(e)}"
+            detail="File upload failed. Please try again.",
         )
-    
-    # Get file type
-    file_type = file_service.get_file_type(file.filename or "untitled")
-    
-    # Save metadata to database
+
+    # Get file type and save metadata to database
+    file_type = file_service.get_file_type(safe_filename)
     project_file = ProjectFile(
         project_id=project_id,
         user_id=current_user.id,
         openai_file_id=openai_file_id,
-        filename=file.filename or "untitled",
+        filename=safe_filename,
         file_type=file_type,
         file_size=file_size
     )

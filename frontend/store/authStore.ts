@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import api from '@/lib/api';
-import { setToken, removeToken, setUser as setUserLocal, getUser as getUserLocal } from '@/lib/auth';
+import { setUser as setUserLocal, getUser as getUserLocal, removeUser as removeUserLocal } from '@/lib/auth';
 
 interface User {
   id: string;
@@ -14,12 +14,11 @@ interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
-  
-  // Actions
+
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, name: string) => Promise<void>;
-  logout: () => void;
-  checkAuth: () => void;
+  logout: () => Promise<void>;
+  checkAuth: () => Promise<boolean>;
   clearError: () => void;
 }
 
@@ -35,18 +34,13 @@ export const useAuthStore = create<AuthState>()(
         set({ isLoading: true, error: null });
         try {
           const response = await api.post('/api/v1/auth/login', { email, password });
-          const { access_token } = response.data;
-          
-          setToken(access_token);
-          
-          // Get user info
-          const userResponse = await api.get('/api/v1/users/me');
-          const user = userResponse.data;
-          
+          const { user } = response.data;
           setUserLocal(user);
           set({ user, isAuthenticated: true, isLoading: false });
-        } catch (error: any) {
-          const errorMessage = error.response?.data?.detail || 'Login failed';
+        } catch (error: unknown) {
+          const err = error as { response?: { data?: { detail?: string | { msg?: string }[] } } };
+          const detail = err.response?.data?.detail;
+          const errorMessage = Array.isArray(detail) ? (detail[0]?.msg ?? 'Login failed') : (detail || 'Login failed');
           set({ error: errorMessage, isLoading: false });
           throw error;
         }
@@ -56,37 +50,38 @@ export const useAuthStore = create<AuthState>()(
         set({ isLoading: true, error: null });
         try {
           await api.post('/api/v1/auth/register', { email, password, name });
-          
-          // Auto-login after registration
           const response = await api.post('/api/v1/auth/login', { email, password });
-          const { access_token } = response.data;
-          
-          setToken(access_token);
-          
-          // Get user info
-          const userResponse = await api.get('/api/v1/users/me');
-          const user = userResponse.data;
-          
+          const { user } = response.data;
           setUserLocal(user);
           set({ user, isAuthenticated: true, isLoading: false });
-        } catch (error: any) {
-          const errorMessage = error.response?.data?.detail || 'Registration failed';
+        } catch (error: unknown) {
+          const err = error as { response?: { data?: { detail?: string | { msg?: string }[] } } };
+          const detail = err.response?.data?.detail;
+          const errorMessage = Array.isArray(detail) ? (detail[0]?.msg ?? 'Registration failed') : (detail || 'Registration failed');
           set({ error: errorMessage, isLoading: false });
           throw error;
         }
       },
 
-      logout: () => {
-        removeToken();
-        set({ user: null, isAuthenticated: false });
+      logout: async () => {
+        try {
+          await api.post('/api/v1/auth/logout');
+        } finally {
+          removeUserLocal();
+          set({ user: null, isAuthenticated: false });
+        }
       },
 
-      checkAuth: () => {
-        const user = getUserLocal();
-        if (user) {
+      checkAuth: async () => {
+        try {
+          const { data: user } = await api.get('/api/v1/users/me');
+          setUserLocal(user);
           set({ user, isAuthenticated: true });
-        } else {
+          return true;
+        } catch {
+          removeUserLocal();
           set({ user: null, isAuthenticated: false });
+          return false;
         }
       },
 

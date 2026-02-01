@@ -66,7 +66,7 @@ const FileUpload = forwardRef<FileUploadHandle, FileUploadProps>(({ projectId, o
   };
 
   return (
-    <div className="w-full">
+    <div className="w-full animate-in fade-in duration-200">
       <div
         className={`border-2 border-dashed rounded-xl p-8 text-center transition-all cursor-pointer ${
           dragActive

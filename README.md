@@ -23,27 +23,6 @@ This platform allows users to:
 - **Deployment**: Railway
 
 
-**Latest Update:** Completed Phase 9 with Railway deployment setup:
-- Railway deployment configuration files (Procfile, runtime.txt)
-- Comprehensive deployment documentation (DEPLOYMENT.md)
-- Architecture documentation (ARCHITECTURE.md)
-- Production-ready configuration
-
-**Previous Update:** Completed Phase 8 with file upload functionality:
-- OpenAI Files API integration for file storage
-- File upload, listing, and deletion endpoints
-- File metadata tracking in database
-- Frontend file management UI with drag-and-drop upload
-- File size validation (10MB limit)
-
-**Previous Update:** Completed Phase 7 with comprehensive architecture redesign:
-- Projects are now folders containing multiple agents with shared context
-- Agents are standalone or project-based AI chats with optional prompts
-- Temporary chats for quick conversations that auto-delete on exit
-- Context management combining project and agent prompts
-- Flexible prompt system at both project and agent levels
-- Modern UI/UX with light/dark mode toggle
-
 ### Features
 - User authentication (JWT)
 - Projects as folders with agents

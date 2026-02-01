@@ -1,30 +1,18 @@
-export const setToken = (token: string) => {
-  if (typeof window !== 'undefined') {
-    localStorage.setItem('token', token);
-  }
-};
+/** Auth is cookie-based; no token is stored in JS. */
 
-export const getToken = (): string | null => {
+export const removeUser = () => {
   if (typeof window !== 'undefined') {
-    return localStorage.getItem('token');
-  }
-  return null;
-};
-
-export const removeToken = () => {
-  if (typeof window !== 'undefined') {
-    localStorage.removeItem('token');
     localStorage.removeItem('user');
   }
 };
 
-export const setUser = (user: any) => {
+export const setUser = (user: unknown) => {
   if (typeof window !== 'undefined') {
     localStorage.setItem('user', JSON.stringify(user));
   }
 };
 
-export const getUser = () => {
+export const getUser = (): unknown => {
   if (typeof window !== 'undefined') {
     const user = localStorage.getItem('user');
     return user ? JSON.parse(user) : null;
@@ -33,5 +21,5 @@ export const getUser = () => {
 };
 
 export const isAuthenticated = (): boolean => {
-  return !!getToken();
+  return !!getUser();
 };

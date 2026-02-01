@@ -77,7 +77,7 @@ export default function ChatInput({ onSend, disabled }: ChatInputProps) {
                 className={`p-2.5 rounded-xl font-medium transition-all flex items-center justify-center flex-shrink-0 ${
                   !message.trim() || disabled
                     ? 'bg-muted text-muted-foreground cursor-not-allowed'
-                    : 'bg-primary hover:bg-primary-hover text-black dark:text-white hover:scale-105 active:scale-95 shadow-sm'
+                    : 'bg-primary hover:bg-primary-hover text-black dark:text-white hover:scale-[1.02] active:scale-[0.98] shadow-sm'
                 }`}
                 title={disabled ? 'Please wait...' : 'Send message (Enter)'}
               >

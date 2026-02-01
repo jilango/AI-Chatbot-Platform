@@ -11,24 +11,16 @@ export default function Home() {
 
   useEffect(() => {
     const check = async () => {
-      await checkAuth();
+      const ok = await checkAuth();
       setIsChecking(false);
+      if (ok) router.push('/dashboard');
+      else router.push('/login');
     };
     check();
-  }, [checkAuth]);
-
-  useEffect(() => {
-    if (!isChecking) {
-      if (isAuthenticated) {
-        router.push('/dashboard');
-      } else {
-        router.push('/login');
-      }
-    }
-  }, [isAuthenticated, isChecking, router]);
+  }, [checkAuth, router]);
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center">
+    <div className="min-h-screen bg-background flex items-center justify-center animate-in fade-in duration-200">
       <div className="text-center">
         <div className="relative w-20 h-20 mx-auto mb-6">
           <div className="absolute inset-0 border-4 border-primary/20 rounded-full"></div>

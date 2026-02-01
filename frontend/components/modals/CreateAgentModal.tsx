@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useProjectStore, Project } from '@/store/projectStore';
 
 interface CreateAgentModalProps {
@@ -33,6 +33,30 @@ export default function CreateAgentModal({
   const [hasPrompt, setHasPrompt] = useState(false);
   const [promptContent, setPromptContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const previousActiveRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    if (isOpen) setErrorMessage(null);
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      previousActiveRef.current = document.activeElement as HTMLElement | null;
+      return;
+    }
+    const handleKeydown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        onClose();
+      }
+    };
+    document.addEventListener('keydown', handleKeydown);
+    return () => {
+      document.removeEventListener('keydown', handleKeydown);
+      previousActiveRef.current?.focus();
+    };
+  }, [isOpen, onClose]);
 
   useEffect(() => {
     if (isOpen && agentType === 'project_agent') {
@@ -49,8 +73,19 @@ export default function CreateAgentModal({
 
   if (!isOpen) return null;
 
+  const getErrorMessage = (error: unknown): string => {
+    const detail = (error as any)?.response?.data?.detail;
+    if (typeof detail === 'string') return detail;
+    if (Array.isArray(detail) && detail[0]) {
+      const first = detail[0];
+      return typeof first === 'object' && first?.msg != null ? String(first.msg) : String(first);
+    }
+    return 'Failed to create agent';
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMessage(null);
     setIsSubmitting(true);
     try {
       await onSubmit({
@@ -71,14 +106,18 @@ export default function CreateAgentModal({
       onClose();
     } catch (error) {
       console.error('Failed to create agent:', error);
+      setErrorMessage(getErrorMessage(error));
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 bg-black dark:bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
-      <div className="bg-popover rounded-2xl p-8 border border-border max-w-2xl w-full shadow-2xl animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
+    <div
+      className="fixed inset-0 bg-black dark:bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200"
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div className="bg-popover rounded-2xl p-8 border border-border max-w-2xl w-full shadow-2xl animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-2xl font-bold">Create New Agent</h3>
           <button
@@ -205,6 +244,18 @@ export default function CreateAgentModal({
             </div>
           )}
 
+          {errorMessage && (
+            <div className="rounded-lg bg-red-500/10 border border-red-500/30 px-4 py-3 text-sm text-red-600 dark:text-red-400 flex items-center justify-between gap-3">
+              <span>{errorMessage}</span>
+              <button
+                type="button"
+                onClick={() => setErrorMessage(null)}
+                className="text-red-600 dark:text-red-400 hover:underline font-medium shrink-0"
+              >
+                Try again
+              </button>
+            </div>
+          )}
           <div className="flex gap-3 pt-4">
             <button
               type="button"
@@ -221,7 +272,7 @@ export default function CreateAgentModal({
                 (agentType === 'project_agent' && !selectedProjectId) || 
                 isSubmitting
               }
-              className="flex-1 px-4 py-3 bg-primary hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed rounded-lg font-medium text-black dark:text-white transition-all shadow-sm"
+              className="flex-1 px-4 py-3 bg-primary hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed rounded-lg font-medium text-black dark:text-white transition-all hover:scale-[1.02] active:scale-[0.98] shadow-sm"
             >
               {isSubmitting ? 'Creating...' : 'Create Agent'}
             </button>

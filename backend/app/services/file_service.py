@@ -1,15 +1,39 @@
 """File service for handling file uploads to OpenAI Files API"""
 
+import os
+import re
+import logging
 from typing import Optional, List
 from uuid import UUID
 from sqlalchemy.orm import Session
 from openai import AsyncOpenAI
-import logging
 
 from app.config import settings
 from app.models import ProjectFile, Project
 
 logger = logging.getLogger(__name__)
+
+# Allowed file extensions for upload (security allowlist)
+ALLOWED_EXTENSIONS = {"txt", "md", "json", "pdf", "csv"}
+MAX_FILENAME_LENGTH = 255
+SAFE_FILENAME_PATTERN = re.compile(r"[^a-zA-Z0-9._-]")
+
+
+def sanitize_filename(filename: str) -> str:
+    """
+    Sanitize a filename: strip path, null bytes, limit length, allow only safe chars.
+    Returns empty string if result would be invalid.
+    """
+    if not filename or not filename.strip():
+        return ""
+    base = os.path.basename(filename).replace("\x00", "").strip()
+    if not base:
+        return ""
+    safe = SAFE_FILENAME_PATTERN.sub("_", base)
+    safe = re.sub(r"_+", "_", safe).strip("._-")
+    if not safe:
+        return ""
+    return safe[:MAX_FILENAME_LENGTH]
 
 
 class FileService:
@@ -118,16 +142,22 @@ class FileService:
     def get_file_type(self, filename: str) -> str:
         """
         Determine file type from filename
-        
+
         Args:
             filename: File name
-            
+
         Returns:
             File type/extension
         """
-        if '.' in filename:
-            return filename.rsplit('.', 1)[1].lower()
+        if "." in filename:
+            return filename.rsplit(".", 1)[1].lower()
         return "unknown"
+
+    @staticmethod
+    def is_allowed_extension(filename: str) -> bool:
+        """Return True only if the file extension is in the allowlist."""
+        ext = filename.rsplit(".", 1)[1].lower() if "." in filename else "unknown"
+        return ext in ALLOWED_EXTENSIONS
 
 
 # Create singleton instance

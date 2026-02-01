@@ -135,6 +135,7 @@ export const useAgentStore = create<AgentState>((set, get) => ({
       set((state) => ({
         agents: state.agents.map((a) => (a.id === id ? updatedAgent : a)),
         standaloneAgents: state.standaloneAgents.map((a) => (a.id === id ? updatedAgent : a)),
+        projectAgents: state.projectAgents.map((a) => (a.id === id ? updatedAgent : a)),
         currentAgent: state.currentAgent?.id === id ? updatedAgent : state.currentAgent,
         isLoading: false
       }));

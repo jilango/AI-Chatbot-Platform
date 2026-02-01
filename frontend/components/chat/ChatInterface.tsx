@@ -10,7 +10,6 @@ import TypingIndicator from './TypingIndicator';
 import ChatInput from './ChatInput';
 import FileUpload, { FileUploadHandle } from '@/components/files/FileUpload';
 import FileList from '@/components/files/FileList';
-import { getToken } from '@/lib/auth';
 import api from '@/lib/api';
 
 interface ChatInterfaceProps {
@@ -33,13 +32,20 @@ export default function ChatInterface({ chatType, chatId }: ChatInterfaceProps) 
     setError,
   } = useChatStore();
 
-  const { agents, loadAgent } = useAgentStore();
+  const { agents, loadAgent, updateAgent, deleteAgent, currentAgent } = useAgentStore();
   const { tempChats, loadTempChat } = useTempChatStore();
 
   const [chatInfo, setChatInfo] = useState<{ name: string; description?: string } | null>(null);
   const [agentProjectId, setAgentProjectId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [showFiles, setShowFiles] = useState(false);
+  const [showEditAgent, setShowEditAgent] = useState(false);
+  const [editName, setEditName] = useState('');
+  const [editDescription, setEditDescription] = useState('');
+  const [editHasPrompt, setEditHasPrompt] = useState(false);
+  const [editPromptContent, setEditPromptContent] = useState('');
+  const [isSavingAgent, setIsSavingAgent] = useState(false);
+  const [showSaveWarning, setShowSaveWarning] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const eventSourceRef = useRef<EventSource | null>(null);
   const fileUploadRef = useRef<FileUploadHandle>(null);
@@ -69,6 +75,45 @@ export default function ChatInterface({ chatType, chatId }: ChatInterfaceProps) 
     loadChatInfo();
   }, [chatType, chatId, loadAgent, loadTempChat, setError]);
 
+  useEffect(() => {
+    if (chatType === 'agent' && currentAgent?.id === chatId) {
+      setChatInfo({ name: currentAgent.name, description: currentAgent.description ?? undefined });
+    }
+  }, [chatType, chatId, currentAgent]);
+
+  useEffect(() => {
+    if (showEditAgent && currentAgent?.id === chatId) {
+      setEditName(currentAgent.name);
+      setEditDescription(currentAgent.description ?? '');
+      setEditHasPrompt(!!currentAgent.has_prompt);
+      setEditPromptContent(currentAgent.prompt_content ?? '');
+    }
+  }, [showEditAgent, chatId, currentAgent]);
+
+  useEffect(() => {
+    if (!showEditAgent) return;
+    const handleKeydown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        setShowEditAgent(false);
+      }
+    };
+    document.addEventListener('keydown', handleKeydown);
+    return () => document.removeEventListener('keydown', handleKeydown);
+  }, [showEditAgent]);
+
+  useEffect(() => {
+    if (!showSaveWarning) return;
+    const handleKeydown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        setShowSaveWarning(false);
+      }
+    };
+    document.addEventListener('keydown', handleKeydown);
+    return () => document.removeEventListener('keydown', handleKeydown);
+  }, [showSaveWarning]);
+
   // Load chat history
   useEffect(() => {
     if (chatType === 'agent') {
@@ -97,26 +142,14 @@ export default function ChatInterface({ chatType, chatId }: ChatInterfaceProps) 
       eventSourceRef.current.close();
     }
 
-    const token = getToken();
-    if (!token) {
-      setError('Authentication required');
-      setStreaming(false);
-      return;
-    }
-
-    // Build URL based on chat type
-    // Note: EventSource doesn't support custom headers, so we pass token as query param
+    // Auth via httpOnly cookie (sent automatically with same-site request)
     const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-    let url: string;
-    
-    if (chatType === 'agent') {
-      url = `${baseUrl}/api/v1/chat/agent/${chatId}/stream?message=${encodeURIComponent(content)}&token=${token}`;
-    } else {
-      url = `${baseUrl}/api/v1/chat/temp/${chatId}/stream?message=${encodeURIComponent(content)}&token=${token}`;
-    }
+    const url =
+      chatType === 'agent'
+        ? `${baseUrl}/api/v1/chat/agent/${chatId}/stream?message=${encodeURIComponent(content)}`
+        : `${baseUrl}/api/v1/chat/temp/${chatId}/stream?message=${encodeURIComponent(content)}`;
 
-    // Create SSE connection
-    const eventSource = new EventSource(url);
+    const eventSource = new EventSource(url, { withCredentials: true });
 
     eventSourceRef.current = eventSource;
 
@@ -164,6 +197,18 @@ export default function ChatInterface({ chatType, chatId }: ChatInterfaceProps) 
 
   const [showClearConfirm, setShowClearConfirm] = useState(false);
 
+  useEffect(() => {
+    if (!showClearConfirm) return;
+    const handleKeydown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        setShowClearConfirm(false);
+      }
+    };
+    document.addEventListener('keydown', handleKeydown);
+    return () => document.removeEventListener('keydown', handleKeydown);
+  }, [showClearConfirm]);
+
   const handleClearChat = async () => {
     try {
       if (chatType === 'agent') {
@@ -185,6 +230,42 @@ export default function ChatInterface({ chatType, chatId }: ChatInterfaceProps) 
       router.push('/dashboard');
     } else {
       // For agents, go back to project page if agent belongs to a project, otherwise dashboard
+      if (agentProjectId) {
+        router.push(`/dashboard/projects/${agentProjectId}`);
+      } else {
+        router.push('/dashboard');
+      }
+    }
+  };
+
+  const handleSaveAgent = async () => {
+    if (!currentAgent || chatType !== 'agent') return;
+    setIsSavingAgent(true);
+    try {
+      await updateAgent(chatId, {
+        name: editName.trim() || currentAgent.name,
+        description: editDescription.trim() || null,
+        has_prompt: editHasPrompt,
+        prompt_content: editHasPrompt ? editPromptContent.trim() : '',
+      });
+    } finally {
+      setIsSavingAgent(false);
+    }
+  };
+
+  const handleProceedSaveAgent = async () => {
+    await handleSaveAgent();
+    setShowSaveWarning(false);
+    setShowEditAgent(false);
+  };
+
+  const handleDeleteAgent = async () => {
+    if (chatType !== 'agent') return;
+    const confirmed = window.confirm(
+      `Are you sure you want to delete this agent? This will permanently remove the agent and its chat history.`
+    );
+    if (confirmed) {
+      await deleteAgent(chatId);
       if (agentProjectId) {
         router.push(`/dashboard/projects/${agentProjectId}`);
       } else {
@@ -216,15 +297,13 @@ export default function ChatInterface({ chatType, chatId }: ChatInterfaceProps) 
             <div className="flex items-center gap-4">
               <button
                 onClick={handleBack}
-                className="flex items-center gap-2 px-3 py-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-all group"
+                className="p-2 hover:bg-muted rounded-lg transition-colors"
                 aria-label="Back"
               >
-                <svg className="w-5 h-5 transition-transform group-hover:-translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                 </svg>
-                <span className="font-medium">Back</span>
               </button>
-              <div className="h-8 w-px bg-border"></div>
               <div className="flex items-center gap-3">
                 {chatType === 'temp' ? (
                   <div className="w-10 h-10 bg-accent/10 rounded-lg flex items-center justify-center">
@@ -250,6 +329,18 @@ export default function ChatInterface({ chatType, chatId }: ChatInterfaceProps) 
 
             {/* Right: Actions */}
             <div className="flex items-center gap-2">
+              {chatType === 'agent' && (
+                <button
+                  onClick={() => setShowEditAgent(true)}
+                  className="flex items-center gap-2 px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted border border-border rounded-lg transition-all"
+                  aria-label="Edit agent"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                  <span className="hidden sm:inline">Edit agent</span>
+                </button>
+              )}
               {chatType === 'agent' && agentProjectId && (
                 <>
                   <button
@@ -297,8 +388,11 @@ export default function ChatInterface({ chatType, chatId }: ChatInterfaceProps) 
 
       {/* Clear Confirmation Modal */}
       {showClearConfirm && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
-          <div className="bg-popover rounded-2xl p-6 border border-border max-w-md w-full shadow-2xl animate-in zoom-in-95 duration-200">
+        <div
+          className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200"
+          onClick={(e) => { if (e.target === e.currentTarget) setShowClearConfirm(false); }}
+        >
+          <div className="bg-popover rounded-2xl p-6 border border-border max-w-md w-full shadow-2xl animate-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-start gap-4">
               <div className="flex-shrink-0 w-12 h-12 bg-accent/10 rounded-full flex items-center justify-center">
                 <svg className="w-6 h-6 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -322,6 +416,140 @@ export default function ChatInterface({ chatType, chatId }: ChatInterfaceProps) 
                     className="flex-1 px-4 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-lg font-medium transition-all"
                   >
                     Clear All
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Agent Modal */}
+      {showEditAgent && chatType === 'agent' && currentAgent?.id === chatId && (
+        <div
+          className="fixed inset-0 bg-black dark:bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200"
+          onClick={(e) => { if (e.target === e.currentTarget) setShowEditAgent(false); }}
+        >
+          <div className="bg-popover rounded-2xl p-8 border border-border max-w-2xl w-full shadow-2xl animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-2xl font-bold">Edit Agent</h3>
+              <button
+                type="button"
+                onClick={() => setShowEditAgent(false)}
+                className="p-2 hover:bg-muted rounded-lg transition-colors"
+                aria-label="Close"
+              >
+                <svg className="w-5 h-5 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <form
+              onSubmit={(e) => { e.preventDefault(); setShowSaveWarning(true); }}
+              className="space-y-4"
+            >
+              <div>
+                <label className="block text-sm font-medium mb-2">Agent Name</label>
+                <input
+                  type="text"
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  className="w-full px-4 py-3 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all"
+                  placeholder="Customer Support Bot"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Description <span className="text-muted-foreground text-xs">(optional)</span>
+                </label>
+                <textarea
+                  value={editDescription}
+                  onChange={(e) => setEditDescription(e.target.value)}
+                  rows={3}
+                  className="w-full px-4 py-3 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent resize-none transition-all"
+                  placeholder="An AI assistant for handling customer inquiries..."
+                />
+              </div>
+              <div className="border border-border rounded-lg p-4">
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={editHasPrompt}
+                    onChange={(e) => setEditHasPrompt(e.target.checked)}
+                    className="w-4 h-4 rounded border-border text-primary focus:ring-2 focus:ring-ring"
+                  />
+                  <span className="font-medium">Add custom prompt for this agent</span>
+                </label>
+                <p className="text-xs text-muted-foreground mt-2 ml-7">
+                  Define the agent&apos;s role, personality, and capabilities
+                </p>
+              </div>
+              {editHasPrompt && (
+                <div>
+                  <label className="block text-sm font-medium mb-2">Agent Prompt</label>
+                  <textarea
+                    value={editPromptContent}
+                    onChange={(e) => setEditPromptContent(e.target.value)}
+                    rows={5}
+                    className="w-full px-4 py-3 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent resize-none transition-all font-mono text-sm"
+                    placeholder="You are a helpful customer support agent..."
+                  />
+                </div>
+              )}
+              <div className="flex items-center justify-between pt-2">
+                <button
+                  type="submit"
+                  disabled={!editName.trim() || isSavingAgent}
+                  className="px-4 py-2 bg-primary hover:bg-primary-hover text-black dark:text-white border border-border rounded-lg font-medium transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:active:scale-100"
+                >
+                  {isSavingAgent ? 'Saving...' : 'Save changes'}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDeleteAgent}
+                  className="text-sm text-red-500 hover:text-red-600 hover:underline"
+                >
+                  Delete Agent
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Save warning popup (agent) */}
+      {showSaveWarning && chatType === 'agent' && (
+        <div
+          className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[60] p-4 animate-in fade-in duration-200"
+          onClick={(e) => { if (e.target === e.currentTarget) setShowSaveWarning(false); }}
+        >
+          <div className="bg-popover rounded-2xl p-6 border border-border max-w-md w-full shadow-2xl animate-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-start gap-4">
+              <div className="flex-shrink-0 w-12 h-12 bg-amber-500/10 rounded-full flex items-center justify-center">
+                <svg className="w-6 h-6 text-amber-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold mb-2">Save agent changes?</h3>
+                <p className="text-sm text-muted-foreground mb-6">
+                  Saving will update the agent&apos;s context. This conversation and future ones may behave differently until they adapt. Do you want to proceed?
+                </p>
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowSaveWarning(false)}
+                    className="flex-1 px-4 py-2.5 bg-muted hover:bg-muted/80 border border-border rounded-lg font-medium transition-all"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleProceedSaveAgent}
+                    disabled={isSavingAgent}
+                    className="flex-1 px-4 py-2.5 bg-primary hover:bg-primary-hover text-black dark:text-white border border-border rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isSavingAgent ? 'Saving...' : 'Proceed'}
                   </button>
                 </div>
               </div>

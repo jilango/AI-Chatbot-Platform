@@ -82,11 +82,12 @@ export default function FileList({ projectId }: FileListProps) {
   }
 
   return (
-    <div className="space-y-2">
-      {files.map((file) => (
+    <div className="space-y-2 animate-in fade-in duration-300">
+      {files.map((file, index) => (
         <div
           key={file.id}
-          className="flex items-center justify-between p-3 bg-card rounded-lg border border-border hover:bg-muted/50 transition-colors group"
+          className="flex items-center justify-between p-3 bg-card rounded-lg border border-border hover:bg-muted/50 transition-colors group animate-in fade-in slide-in-from-bottom-2 duration-300"
+          style={{ animationDelay: `${index * 50}ms` }}
         >
           <div className="flex items-center gap-3 flex-1 min-w-0">
             <span className="text-2xl flex-shrink-0">{getFileIcon(file.file_type)}</span>

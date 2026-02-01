@@ -1,6 +1,11 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
+
 from app.config import settings
+from app.limiter import limiter
 from app.api.v1 import auth, users, projects, agents, temporary_chats, chat, files
 
 app = FastAPI(
@@ -8,6 +13,10 @@ app = FastAPI(
     description="A minimal Chatbot Platform with authentication and LLM integration - Phase 8",
     version="2.1.0"
 )
+
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_middleware(SlowAPIMiddleware)
 
 # CORS middleware
 app.add_middleware(

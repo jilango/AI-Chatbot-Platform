@@ -145,7 +145,7 @@ export default function LoginPage() {
         </div>
 
         {/* Footer Info */}
-        <p className="mt-8 text-center text-muted-foreground text-xs animate-in fade-in duration-700 delay-300">
+        <p className="mt-8 text-center text-muted-foreground text-xs animate-in fade-in duration-300 delay-300">
           By signing in, you agree to our Terms of Service and Privacy Policy
         </p>
       </div>

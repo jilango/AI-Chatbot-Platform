@@ -1,5 +1,3 @@
-import { getToken } from './auth';
-
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
 export interface SSEOptions {
@@ -17,29 +15,16 @@ export function createSSEConnection({
   onComplete,
   onError,
 }: SSEOptions): () => void {
-  const token = getToken();
-  
-  if (!token) {
-    onError(new Error('No authentication token found'));
-    return () => {};
-  }
-
-  // Encode message for URL
   const encodedMessage = encodeURIComponent(message);
   const url = `${API_URL}/api/v1/chat/${projectId}/stream?message=${encodedMessage}`;
-
-  // Note: EventSource doesn't support custom headers in browser
-  // We'll use fetch with ReadableStream instead
   const controller = new AbortController();
-  
+
   const connect = async () => {
     try {
       const response = await fetch(url, {
         method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Accept': 'text/event-stream',
-        },
+        credentials: 'include',
+        headers: { Accept: 'text/event-stream' },
         signal: controller.signal,
       });
 
