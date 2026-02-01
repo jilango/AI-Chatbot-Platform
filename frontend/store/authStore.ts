@@ -36,8 +36,19 @@ export const useAuthStore = create<AuthState>()(
           const response = await api.post('/api/v1/auth/login', { email, password });
           const { user } = response.data;
           setUserLocal(user);
+          // Verify the session cookie is sent (required when frontend and backend are on different domains)
+          try {
+            await api.get('/api/v1/users/me', { skipAuthRedirect: true } as Parameters<typeof api.get>[1]);
+          } catch {
+            set({
+              error: 'Login succeeded but the session cookie was not accepted. If the app and API are on different domains, set the backend env COOKIE_SAMESITE=none (and keep COOKIE_SECURE=true) and ensure CORS_ORIGINS includes this site.',
+              isLoading: false,
+            });
+            throw new Error('Session verification failed');
+          }
           set({ user, isAuthenticated: true, isLoading: false });
         } catch (error: unknown) {
+          if ((error as Error)?.message === 'Session verification failed') return;
           const err = error as { response?: { data?: { detail?: string | { msg?: string }[] } } };
           const detail = err.response?.data?.detail;
           const errorMessage = Array.isArray(detail) ? (detail[0]?.msg ?? 'Login failed') : (detail || 'Login failed');
@@ -53,8 +64,18 @@ export const useAuthStore = create<AuthState>()(
           const response = await api.post('/api/v1/auth/login', { email, password });
           const { user } = response.data;
           setUserLocal(user);
+          try {
+            await api.get('/api/v1/users/me', { skipAuthRedirect: true } as Parameters<typeof api.get>[1]);
+          } catch {
+            set({
+              error: 'Account created but session could not be verified. If the app and API are on different domains, set the backend env COOKIE_SAMESITE=none (and keep COOKIE_SECURE=true) and ensure CORS_ORIGINS includes this site.',
+              isLoading: false,
+            });
+            throw new Error('Session verification failed');
+          }
           set({ user, isAuthenticated: true, isLoading: false });
         } catch (error: unknown) {
+          if ((error as Error)?.message === 'Session verification failed') return;
           const err = error as { response?: { data?: { detail?: string | { msg?: string }[] } } };
           const detail = err.response?.data?.detail;
           const errorMessage = Array.isArray(detail) ? (detail[0]?.msg ?? 'Registration failed') : (detail || 'Registration failed');

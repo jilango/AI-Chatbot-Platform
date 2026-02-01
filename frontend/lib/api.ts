@@ -17,7 +17,8 @@ api.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       const isLoginRequest = error.config?.url?.includes('/auth/login');
-      if (!isLoginRequest) {
+      const skipRedirect = (error.config as { skipAuthRedirect?: boolean })?.skipAuthRedirect;
+      if (!isLoginRequest && !skipRedirect) {
         if (typeof window !== 'undefined') {
           localStorage.removeItem('user');
           localStorage.removeItem('auth-storage'); // clear persisted auth so login page doesn't rehydrate as "logged in"
