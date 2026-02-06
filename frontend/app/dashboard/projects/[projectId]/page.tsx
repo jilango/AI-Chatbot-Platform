@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { useProjectStore } from '@/store/projectStore';
+import { useProjectStore, ContextSource } from '@/store/projectStore';
 import { useAgentStore } from '@/store/agentStore';
 import ThemeToggle from '@/components/ThemeToggle';
 import CreateAgentModal from '@/components/modals/CreateAgentModal';
@@ -24,6 +24,7 @@ export default function ProjectPage() {
   const [editDescription, setEditDescription] = useState('');
   const [editHasPrompt, setEditHasPrompt] = useState(false);
   const [editPromptContent, setEditPromptContent] = useState('');
+  const [editContextSource, setEditContextSource] = useState<ContextSource>('recent');
   const [isSaving, setIsSaving] = useState(false);
   const [showSaveWarning, setShowSaveWarning] = useState(false);
   const fileUploadRef = useRef<FileUploadHandle>(null);
@@ -34,6 +35,7 @@ export default function ProjectPage() {
       setEditDescription(currentProject.description ?? '');
       setEditHasPrompt(!!currentProject.has_prompt);
       setEditPromptContent(currentProject.prompt_content ?? '');
+      setEditContextSource(currentProject.context_source ?? 'recent');
     }
   }, [showProjectSettings, currentProject]);
 
@@ -111,6 +113,7 @@ export default function ProjectPage() {
         description: editDescription.trim() || null,
         has_prompt: editHasPrompt,
         prompt_content: editHasPrompt ? editPromptContent.trim() : '',
+        context_source: currentProject.enable_context_sharing ? editContextSource : 'recent',
       });
     } finally {
       setIsSaving(false);
@@ -131,7 +134,7 @@ export default function ProjectPage() {
           <div className="flex gap-3 justify-center flex-wrap">
             <button
               onClick={() => { clearProjectError(); loadProject(projectId); }}
-              className="px-4 py-2 bg-primary text-black dark:text-white rounded-lg font-medium hover:opacity-90"
+              className="btn-gradient px-4 py-2 rounded-full font-semibold"
             >
               Retry
             </button>
@@ -190,11 +193,11 @@ export default function ProjectPage() {
               {currentProject.enable_context_sharing && (
                 <span
                   className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary/10 text-primary border border-primary/20 text-xs font-medium"
-                  title="Agents can see each other's conversation history"
+                  title={`Context sharing: ${currentProject.context_source === 'rag' ? 'RAG (Semantic Search)' : 'Recent Messages'}`}
                   aria-label="Context sharing is on"
                 >
                   <span className="w-2 h-2 rounded-full bg-green-500 shrink-0" aria-hidden />
-                  Context Sharing
+                  {currentProject.context_source === 'rag' ? 'RAG Context' : 'Context Sharing'}
                 </span>
               )}
               <button
@@ -313,11 +316,51 @@ export default function ProjectPage() {
                 </button>
               </div>
 
+              {currentProject.enable_context_sharing && (
+                <div className="border border-border rounded-lg p-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                  <label className="block text-sm font-medium mb-3">Context Retrieval Method</label>
+                  <div className="space-y-3">
+                    <label className="flex items-start gap-3 cursor-pointer p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors">
+                      <input
+                        type="radio"
+                        name="editContextSource"
+                        value="recent"
+                        checked={editContextSource === 'recent'}
+                        onChange={() => setEditContextSource('recent')}
+                        className="mt-0.5 w-4 h-4 text-primary focus:ring-2 focus:ring-ring"
+                      />
+                      <div>
+                        <span className="font-medium">Recent Messages</span>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Shows the most recent conversations from other agents (faster, simpler)
+                        </p>
+                      </div>
+                    </label>
+                    <label className="flex items-start gap-3 cursor-pointer p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors">
+                      <input
+                        type="radio"
+                        name="editContextSource"
+                        value="rag"
+                        checked={editContextSource === 'rag'}
+                        onChange={() => setEditContextSource('rag')}
+                        className="mt-0.5 w-4 h-4 text-primary focus:ring-2 focus:ring-ring"
+                      />
+                      <div>
+                        <span className="font-medium">RAG (Semantic Search)</span>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Finds the most relevant context based on the current conversation (smarter, more accurate)
+                        </p>
+                      </div>
+                    </label>
+                  </div>
+                </div>
+              )}
+
               <div className="flex items-center justify-between pt-2">
                 <button
                   type="submit"
                   disabled={!editName.trim() || isSaving}
-                  className="px-4 py-2 bg-primary hover:bg-primary-hover text-black dark:text-white border border-border rounded-lg font-medium transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:active:scale-100"
+                  className="btn-gradient px-4 py-2 rounded-full font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isSaving ? 'Saving...' : 'Save changes'}
                 </button>
@@ -364,7 +407,7 @@ export default function ProjectPage() {
                     type="button"
                     onClick={handleProceedSave}
                     disabled={isSaving}
-                    className="flex-1 px-4 py-2.5 bg-primary hover:bg-primary-hover text-black dark:text-white border border-border rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="btn-gradient flex-1 px-4 py-2.5 rounded-full font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isSaving ? 'Saving...' : 'Proceed'}
                   </button>

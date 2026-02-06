@@ -138,3 +138,224 @@ body {
 .animate-in.duration-700 { animation-duration: 700ms; }
 .animate-in.delay-100 { animation-delay: 100ms; }
 .animate-in.delay-300 { animation-delay: 300ms; }
+
+/* Animatable highlight position */
+@property --highlight-x {
+  syntax: '<percentage>';
+  initial-value: 50%;
+  inherits: false;
+}
+
+@property --highlight-y {
+  syntax: '<percentage>';
+  initial-value: 0%;
+  inherits: false;
+}
+
+/* Gradient CTA button - Primary action buttons throughout the app */
+button.btn-gradient,
+.btn-gradient {
+  background: linear-gradient(135deg, #3B82F6, #0EA5E9, #06B6D4) !important;
+  background-image:
+    radial-gradient(circle at var(--highlight-x, 50%) var(--highlight-y, 0%), rgba(235,245,248,1) 0%, rgba(211,229,235,0.85) 20%, rgba(171,217,211,0.5) 40%, transparent 65%),
+    linear-gradient(135deg, #3B82F6, #0EA5E9, #06B6D4) !important;
+  background-size: 100% 100%, 100% 100% !important;
+  animation: orbit-highlight 24s linear infinite;
+  color: white !important;
+  box-shadow: 0 10px 30px -10px rgba(59, 130, 246, 0.55) !important;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border: none !important;
+}
+
+.btn-gradient:hover:not(:disabled) {
+  box-shadow: 0 15px 40px -10px rgba(59, 130, 246, 0.7) !important;
+  transform: translateY(-2px);
+}
+
+.btn-gradient:focus-visible {
+  outline: none !important;
+  box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.6) !important;
+}
+
+/* Lighter colors orbit smoothly along the outer edge */
+@keyframes orbit-highlight {
+  0%     { --highlight-x: 30%;   --highlight-y: -40%; }
+  4%     { --highlight-x: 50%;   --highlight-y: -40%; }
+  8%     { --highlight-x: 70%;   --highlight-y: -40%; }
+  12%    { --highlight-x: 100%;  --highlight-y: -35%; }
+  16%    { --highlight-x: 140%;  --highlight-y: 10%; }
+  20%    { --highlight-x: 140%;  --highlight-y: 30%; }
+  25%    { --highlight-x: 140%;  --highlight-y: 50%; }
+  30%    { --highlight-x: 140%;  --highlight-y: 70%; }
+  34%    { --highlight-x: 140%;  --highlight-y: 90%; }
+  38%    { --highlight-x: 100%;  --highlight-y: 135%; }
+  42%    { --highlight-x: 70%;   --highlight-y: 140%; }
+  46%    { --highlight-x: 50%;   --highlight-y: 140%; }
+  50%    { --highlight-x: 30%;   --highlight-y: 140%; }
+  54%    { --highlight-x: 0%;    --highlight-y: 135%; }
+  58%    { --highlight-x: -40%;  --highlight-y: 90%; }
+  62%    { --highlight-x: -40%;  --highlight-y: 70%; }
+  67%    { --highlight-x: -40%;  --highlight-y: 50%; }
+  72%    { --highlight-x: -40%;  --highlight-y: 30%; }
+  76%    { --highlight-x: -40%;  --highlight-y: 10%; }
+  80%    { --highlight-x: 0%;    --highlight-y: -35%; }
+  84%    { --highlight-x: 15%;   --highlight-y: -40%; }
+  100%   { --highlight-x: 30%;   --highlight-y: -40%; }
+}
+
+/* Glow effect for cards and logo */
+.glow {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.glow:hover {
+  box-shadow: 0 12px 40px -8px rgba(59, 130, 246, 0.65);
+  transform: translateY(-4px);
+}
+
+/* Card-specific glow: drop-shadow follows the 3D transform */
+.flip-container {
+  transition: filter 0.3s ease;
+}
+
+.flip-container:hover {
+  filter: drop-shadow(0 12px 24px rgba(59, 130, 246, 0.5));
+}
+
+/* Card flip */
+.flip-container {
+  cursor: pointer;
+  perspective: 800px;
+}
+
+.flip-card {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.flip-container.flipped .flip-card {
+  transform: rotateY(180deg);
+}
+
+.flip-front,
+.flip-back {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border-radius: 1rem;
+  overflow: hidden;
+  transition: none;
+}
+
+.flip-front {
+  transform: translateZ(1px);
+}
+
+.flip-back {
+  transform: rotateY(180deg);
+  overflow: visible;
+  width: 100%;
+  height: 100%;
+}
+
+.flip-card .btn-gradient {
+  transition: none;
+  transform: none;
+}
+
+.flip-card .btn-gradient:hover:not(:disabled) {
+  transform: none;
+}
+
+/* Gradient border using pseudo-element */
+.gradient-border {
+  position: relative;
+  background: transparent;
+  width: 100%;
+  height: 100%;
+}
+
+.gradient-border::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background:
+    radial-gradient(circle at var(--highlight-x) var(--highlight-y), rgba(235,245,248,1) 0%, rgba(211,229,235,0.9) 20%, rgba(171,217,211,0.6) 40%, transparent 65%),
+    linear-gradient(135deg, #3B82F6, #0EA5E9, #06B6D4);
+  animation: orbit-highlight 25s linear infinite;
+  z-index: 0;
+}
+
+.gradient-border::after {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  border-radius: inherit;
+  background: var(--card);
+  z-index: 0;
+}
+
+.gradient-border > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Gradient border on hover for cards */
+.card-gradient-border {
+  position: relative;
+  overflow: visible;
+}
+
+.card-gradient-border::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: 0.75rem;
+  background:
+    radial-gradient(circle at var(--highlight-x, 50%) var(--highlight-y, 0%), rgba(235,245,248,1) 0%, rgba(211,229,235,0.9) 20%, rgba(171,217,211,0.6) 40%, transparent 65%),
+    linear-gradient(135deg, #3B82F6, #0EA5E9, #06B6D4);
+  background-size: 100% 100%, 100% 100%;
+  animation: orbit-highlight 14s linear infinite;
+  z-index: 0;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.card-gradient-border:hover::before {
+  opacity: 1;
+}
+
+.card-gradient-border::after {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  border-radius: calc(0.75rem - 1px);
+  background-color: var(--card);
+  z-index: 0;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.card-gradient-border.group:hover::after,
+.card-gradient-border:hover::after {
+  opacity: 1;
+  background-color: var(--muted);
+  transition: opacity 0.3s ease, background-color 0s ease;
+}
+
+/* For buttons with gradient backgrounds, don't cover with ::after */
+.card-gradient-border.btn-gradient::after {
+  display: none;
+}
+
+.card-gradient-border > * {
+  position: relative;
+  z-index: 1;
+}

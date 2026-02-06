@@ -27,6 +27,10 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: Optional[str] = None
     OPENROUTER_API_KEY: Optional[str] = None
     LLM_PROVIDER: str = "openai"  # or "openrouter"
+    
+    # Embeddings (for RAG)
+    OPENAI_EMBEDDING_MODEL: str = "text-embedding-3-small"
+    EMBEDDING_DIMENSION: int = 1536  # Dimension for text-embedding-3-small
 
     # CORS
     CORS_ORIGINS: str = '["http://localhost:3000","http://localhost:8080"]'

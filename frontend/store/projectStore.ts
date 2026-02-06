@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import api from '@/lib/api';
 
+export type ContextSource = 'recent' | 'rag';
+
 export interface Project {
   id: string;
   user_id: string;
@@ -9,6 +11,7 @@ export interface Project {
   has_prompt: boolean;
   prompt_content: string | null;
   enable_context_sharing: boolean;
+  context_source: ContextSource;
   created_at: string;
   updated_at: string;
   agent_count: number;
@@ -29,6 +32,7 @@ interface ProjectState {
     has_prompt?: boolean;
     prompt_content?: string;
     enable_context_sharing?: boolean;
+    context_source?: ContextSource;
   }) => Promise<Project>;
   updateProject: (id: string, data: Partial<Project>) => Promise<void>;
   deleteProject: (id: string) => Promise<void>;

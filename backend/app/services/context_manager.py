@@ -1,11 +1,15 @@
 """Context management service for handling prompts and shared context between agents"""
 
+import logging
 from typing import List, Dict, Optional
 from sqlalchemy.orm import Session
-from sqlalchemy import and_
 from uuid import UUID
 
-from app.models import Agent, Project, ChatMessage, MessageRole
+from app.models import Agent, Project, ChatMessage, MessageRole, ContextSource
+from app.services.context_providers import RecencyProvider, RAGProvider, SharedContextProvider
+from app.services.context_providers.rag_provider import EmbeddingService
+
+logger = logging.getLogger(__name__)
 
 
 class ContextManager:
@@ -13,6 +17,25 @@ class ContextManager:
 
     def __init__(self, db: Session):
         self.db = db
+        self._providers: Dict[ContextSource, SharedContextProvider] = {}
+
+    def _get_provider(self, context_source: ContextSource) -> SharedContextProvider:
+        """
+        Get or create the appropriate context provider.
+        
+        Args:
+            context_source: The context source type (RECENT or RAG)
+            
+        Returns:
+            The appropriate SharedContextProvider instance
+        """
+        if context_source not in self._providers:
+            if context_source == ContextSource.RAG:
+                self._providers[context_source] = RAGProvider(self.db)
+            else:
+                # Default to recency provider
+                self._providers[context_source] = RecencyProvider(self.db)
+        return self._providers[context_source]
 
     def build_system_prompt(self, agent_id: UUID) -> Optional[str]:
         """
@@ -45,52 +68,56 @@ class ContextManager:
         self, 
         project_id: UUID, 
         current_agent_id: UUID,
+        query: Optional[str] = None,
         limit: int = 20
     ) -> Optional[str]:
         """
         Get shared context from other agents in the same project.
-        Returns a summary of recent conversations from other agents.
+        
+        Uses the configured context provider (recency or RAG) based on project settings.
+        The query parameter is used by the RAG provider for semantic search.
+        
+        Args:
+            project_id: The project ID
+            current_agent_id: The current agent ID (to exclude from results)
+            query: Optional query string for semantic search (used by RAG)
+            limit: Maximum number of messages/chunks to include
+            
+        Returns:
+            Formatted shared context string, or None if unavailable
         """
         project = self.db.query(Project).filter(Project.id == project_id).first()
         
-        # If context sharing is disabled, return None
+        # Gate: If context sharing is disabled, return None
         if not project or not project.enable_context_sharing:
             return None
 
-        # Get other agents in the project
-        other_agents = self.db.query(Agent).filter(
-            and_(
-                Agent.project_id == project_id,
-                Agent.id != current_agent_id
-            )
-        ).all()
-
-        if not other_agents:
-            return None
-
-        # Get recent messages from other agents
-        other_agent_ids = [agent.id for agent in other_agents]
+        # Get the appropriate provider based on project settings
+        context_source = project.context_source or ContextSource.RECENT
+        provider = self._get_provider(context_source)
         
-        recent_messages = (
-            self.db.query(ChatMessage)
-            .filter(ChatMessage.agent_id.in_(other_agent_ids))
-            .order_by(ChatMessage.created_at.desc())
-            .limit(limit)
-            .all()
+        # Call the provider
+        return provider.get_shared_context(
+            project_id=project_id,
+            current_agent_id=current_agent_id,
+            query=query,
+            limit=limit
         )
 
-        if not recent_messages:
-            return None
-
-        # Format as context summary
-        context_parts = ["SHARED CONTEXT FROM OTHER AGENTS IN PROJECT:"]
-        for msg in reversed(recent_messages):  # Show chronologically
-            agent = next((a for a in other_agents if a.id == msg.agent_id), None)
-            agent_name = agent.name if agent else "Unknown Agent"
-            role_label = "User" if msg.role == MessageRole.USER else "Assistant"
-            context_parts.append(f"[{agent_name} - {role_label}]: {msg.content[:200]}")
-
-        return "\n".join(context_parts)
+    def _extract_latest_user_message(self, messages: List[Dict]) -> Optional[str]:
+        """
+        Extract the latest user message from the message list.
+        
+        Args:
+            messages: List of message dictionaries with 'role' and 'content'
+            
+        Returns:
+            The content of the latest user message, or None if not found
+        """
+        for msg in reversed(messages):
+            if msg.get("role") == "user":
+                return msg.get("content")
+        return None
 
     def format_context_for_llm(
         self,
@@ -101,6 +128,8 @@ class ContextManager:
         """
         Format complete context for LLM API call.
         Returns a list of message dictionaries ready for OpenAI API.
+        
+        Passes the latest user message as the query for RAG-based shared context.
         """
         formatted_messages = []
 
@@ -116,7 +145,14 @@ class ContextManager:
         if include_shared_context:
             agent = self.db.query(Agent).filter(Agent.id == agent_id).first()
             if agent and agent.project_id:
-                shared_context = self.get_shared_context(agent.project_id, agent_id)
+                # Extract latest user message for RAG query
+                query = self._extract_latest_user_message(current_messages)
+                
+                shared_context = self.get_shared_context(
+                    agent.project_id, 
+                    agent_id,
+                    query=query  # Pass query for RAG
+                )
                 if shared_context:
                     formatted_messages.append({
                         "role": "system",
@@ -170,7 +206,12 @@ class ContextManager:
         agent_id: Optional[UUID] = None,
         temp_chat_id: Optional[UUID] = None
     ) -> ChatMessage:
-        """Save a chat message to database"""
+        """
+        Save a chat message to database.
+        
+        If the message belongs to an agent with RAG-enabled context sharing,
+        the message will also be indexed for semantic search.
+        """
         message = ChatMessage(
             user_id=user_id,
             agent_id=agent_id,
@@ -181,7 +222,50 @@ class ContextManager:
         self.db.add(message)
         self.db.commit()
         self.db.refresh(message)
+        
+        # Trigger RAG indexing if applicable
+        if agent_id:
+            self._maybe_index_for_rag(message, agent_id)
+        
         return message
+    
+    def _maybe_index_for_rag(self, message: ChatMessage, agent_id: UUID) -> None:
+        """
+        Index the message for RAG if the project has RAG context enabled.
+        
+        Args:
+            message: The message to potentially index
+            agent_id: The agent ID the message belongs to
+        """
+        try:
+            # Get the agent and its project
+            agent = self.db.query(Agent).filter(Agent.id == agent_id).first()
+            if not agent or not agent.project_id:
+                return
+            
+            project = self.db.query(Project).filter(Project.id == agent.project_id).first()
+            if not project:
+                return
+            
+            # Check if RAG indexing is enabled for this project
+            if not project.enable_context_sharing:
+                return
+            if project.context_source != ContextSource.RAG:
+                return
+            
+            # Index the message
+            embedding_service = EmbeddingService(self.db)
+            embedding_service.index_message(
+                message_id=message.id,
+                agent_id=agent_id,
+                project_id=project.id,
+                content=message.content
+            )
+            logger.debug(f"Indexed message {message.id} for RAG")
+            
+        except Exception as e:
+            # Don't fail the save operation if indexing fails
+            logger.error(f"Error indexing message for RAG: {e}")
 
     def clear_agent_history(self, agent_id: UUID) -> int:
         """Clear all messages for an agent. Returns number of deleted messages."""

@@ -69,9 +69,9 @@ export default function DashboardPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <Link href="/dashboard" className="flex items-center gap-3 hover:opacity-90 transition-opacity">
-              <div className="w-10 h-10 bg-muted dark:bg-primary rounded-xl flex items-center justify-center shadow-lg">
-                <svg className="w-6 h-6 text-muted-foreground dark:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+              <div className="relative w-12 h-12 rounded-xl btn-gradient glow flex items-center justify-center">
+                <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                 </svg>
               </div>
               <h1 className="text-xl font-bold">Chatbot Platform</h1>
@@ -174,7 +174,7 @@ export default function DashboardPage() {
           <div className="flex-[0.3] flex flex-col gap-4 animate-in fade-in slide-in-from-top-2 duration-300 delay-100">
             <button
               onClick={() => setShowNewProject(true)}
-              className="flex items-center gap-4 p-6 bg-card hover:bg-muted border border-border rounded-xl transition-all hover:scale-[1.02] active:scale-[0.98] group"
+              className="card-gradient-border glow flex items-center gap-4 p-6 bg-card hover:bg-muted border border-border hover:border-transparent rounded-xl transition-[transform,box-shadow] hover:scale-[1.02] active:scale-[0.98] group"
             >
               <div className="w-12 h-12 bg-primary/10 group-hover:bg-primary/20 rounded-lg flex items-center justify-center transition-colors">
                 <svg className="w-6 h-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -189,7 +189,7 @@ export default function DashboardPage() {
 
             <button
               onClick={() => setShowNewAgent(true)}
-              className="flex items-center gap-4 p-6 bg-card hover:bg-muted border border-border rounded-xl transition-all hover:scale-[1.02] active:scale-[0.98] group"
+              className="card-gradient-border glow flex items-center gap-4 p-6 bg-card hover:bg-muted border border-border hover:border-transparent rounded-xl transition-[transform,box-shadow] hover:scale-[1.02] active:scale-[0.98] group"
             >
               <div className="w-12 h-12 bg-primary/10 group-hover:bg-primary/20 rounded-lg flex items-center justify-center transition-colors">
                 <svg className="w-6 h-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -204,7 +204,7 @@ export default function DashboardPage() {
 
             <button
               onClick={handleQuickChat}
-              className="flex items-center gap-4 p-6 bg-card hover:bg-muted border border-border rounded-xl transition-all hover:scale-[1.02] active:scale-[0.98] group"
+              className="card-gradient-border glow flex items-center gap-4 p-6 bg-card hover:bg-muted border border-border hover:border-transparent rounded-xl transition-[transform,box-shadow] hover:scale-[1.02] active:scale-[0.98] group"
             >
               <div className="w-12 h-12 bg-accent/10 group-hover:bg-accent/20 rounded-lg flex items-center justify-center transition-colors">
                 <svg className="w-6 h-6 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">

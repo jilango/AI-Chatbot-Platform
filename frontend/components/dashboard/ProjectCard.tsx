@@ -12,7 +12,7 @@ export default function ProjectCard({ project, onClick, style }: ProjectCardProp
     <button
       onClick={onClick}
       style={style}
-      className="group bg-card hover:bg-muted rounded-xl p-6 border border-border hover:border-primary/50 transition-all text-left relative overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300 min-h-[180px] w-full h-full flex flex-col"
+      className="card-gradient-border glow group bg-card hover:bg-muted rounded-xl p-6 border border-border hover:border-transparent transition-[transform,box-shadow,border-color] text-left relative animate-in fade-in slide-in-from-bottom-4 duration-300 min-h-[180px] w-full h-full flex flex-col"
       aria-label={`Open project ${project.name}`}
     >
       {/* Gradient Overlay on Hover */}

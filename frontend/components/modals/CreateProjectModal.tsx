@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { ContextSource } from '@/store/projectStore';
 
 interface CreateProjectModalProps {
   isOpen: boolean;
@@ -11,6 +12,7 @@ interface CreateProjectModalProps {
     has_prompt: boolean;
     prompt_content: string;
     enable_context_sharing: boolean;
+    context_source: ContextSource;
   }) => Promise<void>;
 }
 
@@ -30,6 +32,7 @@ export default function CreateProjectModal({ isOpen, onClose, onSubmit }: Create
   const [hasPrompt, setHasPrompt] = useState(false);
   const [promptContent, setPromptContent] = useState('');
   const [enableContextSharing, setEnableContextSharing] = useState(true);
+  const [contextSource, setContextSource] = useState<ContextSource>('recent');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const previousActiveRef = useRef<HTMLElement | null>(null);
@@ -69,6 +72,7 @@ export default function CreateProjectModal({ isOpen, onClose, onSubmit }: Create
         has_prompt: hasPrompt,
         prompt_content: hasPrompt ? promptContent : '',
         enable_context_sharing: enableContextSharing,
+        context_source: enableContextSharing ? contextSource : 'recent',
       });
       // Reset form
       setName('');
@@ -76,6 +80,7 @@ export default function CreateProjectModal({ isOpen, onClose, onSubmit }: Create
       setHasPrompt(false);
       setPromptContent('');
       setEnableContextSharing(true);
+      setContextSource('recent');
       onClose();
     } catch (error) {
       console.error('Failed to create project:', error);
@@ -178,6 +183,46 @@ export default function CreateProjectModal({ isOpen, onClose, onSubmit }: Create
             </p>
           </div>
 
+          {enableContextSharing && (
+            <div className="border border-border rounded-lg p-4 animate-in fade-in slide-in-from-top-2 duration-300">
+              <label className="block text-sm font-medium mb-3">Context Retrieval Method</label>
+              <div className="space-y-3">
+                <label className="flex items-start gap-3 cursor-pointer p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors">
+                  <input
+                    type="radio"
+                    name="contextSource"
+                    value="recent"
+                    checked={contextSource === 'recent'}
+                    onChange={() => setContextSource('recent')}
+                    className="mt-0.5 w-4 h-4 text-primary focus:ring-2 focus:ring-ring"
+                  />
+                  <div>
+                    <span className="font-medium">Recent Messages</span>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Shows the most recent conversations from other agents (faster, simpler)
+                    </p>
+                  </div>
+                </label>
+                <label className="flex items-start gap-3 cursor-pointer p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors">
+                  <input
+                    type="radio"
+                    name="contextSource"
+                    value="rag"
+                    checked={contextSource === 'rag'}
+                    onChange={() => setContextSource('rag')}
+                    className="mt-0.5 w-4 h-4 text-primary focus:ring-2 focus:ring-ring"
+                  />
+                  <div>
+                    <span className="font-medium">RAG (Semantic Search)</span>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Finds the most relevant context based on the current conversation (smarter, more accurate)
+                    </p>
+                  </div>
+                </label>
+              </div>
+            </div>
+          )}
+
           {errorMessage && (
             <div className="rounded-lg bg-red-500/10 border border-red-500/30 px-4 py-3 text-sm text-red-600 dark:text-red-400 flex items-center justify-between gap-3">
               <span>{errorMessage}</span>
@@ -202,7 +247,7 @@ export default function CreateProjectModal({ isOpen, onClose, onSubmit }: Create
             <button
               type="submit"
               disabled={!name.trim() || isSubmitting}
-              className="flex-1 px-4 py-3 bg-primary hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed rounded-lg font-medium text-black dark:text-white transition-all hover:scale-[1.02] active:scale-[0.98] shadow-sm"
+              className="btn-gradient flex-1 px-4 py-3 rounded-full font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmitting ? 'Creating...' : 'Create Project'}
             </button>
