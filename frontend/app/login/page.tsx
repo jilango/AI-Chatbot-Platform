@@ -72,10 +72,10 @@ export default function LoginPage() {
     <div className="min-h-screen flex justify-center bg-background">
       <div className="w-full max-w-6xl min-h-screen flex flex-col lg:flex-row gap-12 lg:gap-16">
       {/* Left Panel - Hero + value props */}
-      <div className="flex-1 flex flex-col justify-center px-8 py-12 lg:py-16 xl:py-20 lg:px-12 xl:px-16 animate-in fade-in duration-500">
+      <div className="flex-1 flex flex-col justify-center px-8 py-12 lg:py-16 xl:py-20 lg:px-12 xl:px-16 animate-in fade-in duration-500 order-2 lg:order-1">
         <div className="max-w-lg xl:max-w-xl mx-auto lg:mx-0 w-full">
-          {/* Logo + Brand */}
-          <div className="flex items-center gap-3 mb-10">
+          {/* Logo + Brand - Desktop only */}
+          <div className="hidden lg:flex items-center gap-3 mb-10">
             <div className="relative w-12 h-12 rounded-xl btn-gradient glow flex items-center justify-center">
               <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
@@ -84,10 +84,10 @@ export default function LoginPage() {
             <span className="text-xl font-bold text-white">Chatbot Platform</span>
           </div>
 
-          <h1 className="text-3xl lg:text-4xl font-bold text-white mb-4 animate-in fade-in slide-in-from-bottom-2 duration-500 delay-100">
-            Build Smarter AI Chats in Minutes
+          <h1 className="text-center lg:text-left text-3xl lg:text-4xl font-bold text-white mb-4 animate-in fade-in slide-in-from-bottom-2 duration-500 delay-100">
+            Build Teams of Smarter AI Chats in Minutes
           </h1>
-          <p className="text-white/90 text-lg mb-10 animate-in fade-in slide-in-from-bottom-2 duration-500 delay-200">
+          <p className="text-center lg:text-left text-white/90 text-lg mb-10 animate-in fade-in slide-in-from-bottom-2 duration-500 delay-200">
             Create, organize, and deploy AI agents that actually understand your context. No complexity, just results.
           </p>
 
@@ -121,15 +121,24 @@ export default function LoginPage() {
             ))}
           </div>
 
-          <p className="mt-10 text-sm text-white/70 animate-in fade-in duration-500 delay-500">
+          <p className="text-center lg:text-left mt-10 text-sm text-white/70 animate-in fade-in duration-500 delay-500">
             Click the cards to know why builders creating AI teams choose this app.
           </p>
         </div>
       </div>
 
       {/* Right Panel - Login form */}
-      <div className="flex-1 flex items-center justify-center px-4 py-8 lg:py-16 xl:py-20">
+      <div className="flex-1 flex items-center justify-center px-4 py-8 lg:py-16 xl:py-20 order-1 lg:order-2">
         <div className="w-full max-w-md">
+          {/* Logo + Brand - Mobile only */}
+          <div className="flex items-center justify-center gap-3 mb-8 lg:hidden">
+            <div className="relative w-12 h-12 rounded-xl btn-gradient glow flex items-center justify-center">
+              <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+              </svg>
+            </div>
+            <span className="text-xl font-bold text-white">Chatbot Platform</span>
+          </div>
           {/* Login Card */}
           <div className="bg-card rounded-2xl p-8 border border-border shadow-2xl animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="text-center mb-8">
