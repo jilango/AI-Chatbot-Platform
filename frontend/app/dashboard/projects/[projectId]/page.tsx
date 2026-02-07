@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useProjectStore, ContextSource } from '@/store/projectStore';
 import { useAgentStore } from '@/store/agentStore';
+import { useAuthStore } from '@/store/authStore';
 import ThemeToggle from '@/components/ThemeToggle';
 import CreateAgentModal from '@/components/modals/CreateAgentModal';
 import AgentCard from '@/components/dashboard/AgentCard';
@@ -17,6 +18,7 @@ export default function ProjectPage() {
   
   const { currentProject, loadProject, updateProject, deleteProject, error: projectError, clearError: clearProjectError } = useProjectStore();
   const { projectAgents, loadProjectAgents, createAgent, isLoading, error: agentsError, clearError: clearAgentsError } = useAgentStore();
+  const { user, logout } = useAuthStore();
   const [showNewAgent, setShowNewAgent] = useState(false);
   const [showProjectSettings, setShowProjectSettings] = useState(false);
   const [showFiles, setShowFiles] = useState(false);
@@ -134,7 +136,7 @@ export default function ProjectPage() {
           <div className="flex gap-3 justify-center flex-wrap">
             <button
               onClick={() => { clearProjectError(); loadProject(projectId); }}
-              className="btn-gradient px-4 py-2 rounded-full font-semibold"
+              className="btn-gradient px-4 py-2 rounded-lg font-semibold"
             >
               Retry
             </button>
@@ -202,17 +204,31 @@ export default function ProjectPage() {
               )}
               <button
                 onClick={() => setShowProjectSettings(!showProjectSettings)}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border bg-card hover:bg-muted text-sm font-medium transition-colors"
+                className="card-gradient-border glow group flex items-center gap-2 px-3 py-1.5 rounded-xl border border-border bg-card hover:bg-muted hover:border-transparent text-sm font-medium transition-[transform,box-shadow,border-color]"
                 aria-label="Edit project"
               >
-                <svg className="w-4 h-4 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="w-4 h-4 text-muted-foreground relative z-[1]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                 </svg>
-                Edit project
+                <span className="relative z-[1]">Edit project</span>
               </button>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
+              <div className="hidden sm:flex items-center gap-2 px-3 py-2 bg-card rounded-lg border border-border">
+                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                <span className="text-sm text-muted-foreground">{user?.name}</span>
+              </div>
               <ThemeToggle />
+              <button
+                onClick={logout}
+                className="card-gradient-border glow group flex items-center gap-2 px-4 py-2 text-sm text-muted-foreground hover:text-foreground rounded-xl border border-border bg-card hover:bg-muted hover:border-transparent transition-[transform,box-shadow,border-color]"
+                aria-label="Log out"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+                <span className="hidden sm:inline">Logout</span>
+              </button>
             </div>
           </div>
         </div>
@@ -358,18 +374,18 @@ export default function ProjectPage() {
 
               <div className="flex items-center justify-between pt-2">
                 <button
-                  type="submit"
-                  disabled={!editName.trim() || isSaving}
-                  className="btn-gradient px-4 py-2 rounded-full font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isSaving ? 'Saving...' : 'Save changes'}
-                </button>
-                <button
                   type="button"
                   onClick={handleDeleteProject}
                   className="text-sm text-red-500 hover:text-red-600 hover:underline"
                 >
                   Delete Project
+                </button>
+                <button
+                  type="submit"
+                  disabled={!editName.trim() || isSaving}
+                  className="btn-gradient px-4 py-2 rounded-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSaving ? 'Saving...' : 'Save changes'}
                 </button>
               </div>
             </form>
@@ -407,7 +423,7 @@ export default function ProjectPage() {
                     type="button"
                     onClick={handleProceedSave}
                     disabled={isSaving}
-                    className="btn-gradient flex-1 px-4 py-2.5 rounded-full font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="btn-gradient flex-1 px-4 py-2.5 rounded-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isSaving ? 'Saving...' : 'Proceed'}
                   </button>
@@ -423,9 +439,9 @@ export default function ProjectPage() {
         <div className="mb-6 flex items-center gap-4 flex-wrap">
           <button
             onClick={() => setShowNewAgent(true)}
-            className="flex items-center gap-3 px-6 py-3 bg-primary hover:bg-primary-hover text-black dark:text-white border border-border rounded-lg transition-all hover:scale-[1.02] active:scale-[0.98] shadow-sm"
+            className="btn-gradient flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-semibold transition-all hover:scale-[1.02] active:scale-[0.98]"
           >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
             </svg>
             Add Agent to Project
@@ -438,21 +454,21 @@ export default function ProjectPage() {
                 fileUploadRef.current?.triggerUpload();
               }, 100);
             }}
-            className="flex items-center gap-3 px-6 py-3 bg-primary hover:bg-primary-hover text-black dark:text-white border border-border rounded-lg transition-all hover:scale-[1.02] active:scale-[0.98] shadow-sm"
+            className="card-gradient-border glow group flex items-center gap-3 px-6 py-3 rounded-xl border border-border bg-card hover:bg-muted hover:border-transparent transition-[transform,box-shadow,border-color] hover:scale-[1.02] active:scale-[0.98]"
           >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="w-5 h-5 relative z-[1]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
             </svg>
-            Upload File
+            <span className="relative z-[1]">Upload File</span>
           </button>
           <button
             onClick={() => setShowFiles(!showFiles)}
-            className="flex items-center gap-3 px-6 py-3 bg-card hover:bg-muted border border-border rounded-lg transition-all hover:scale-[1.02] active:scale-[0.98]"
+            className="card-gradient-border glow group flex items-center gap-3 px-6 py-3 rounded-xl border border-border bg-card hover:bg-muted hover:border-transparent transition-[transform,box-shadow,border-color] hover:scale-[1.02] active:scale-[0.98]"
           >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="w-5 h-5 relative z-[1]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
-            {showFiles ? 'Hide' : 'Show'} Files
+            <span className="relative z-[1]">{showFiles ? 'Hide' : 'Show'} Files</span>
           </button>
         </div>
 

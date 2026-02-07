@@ -204,7 +204,7 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="btn-gradient w-auto px-25 py-2.5 rounded-full font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 mx-auto mt-3"
+                className="btn-gradient w-auto px-25 py-2.5 rounded-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 mx-auto mt-3"
               >
                 {isLoading ? (
                   <>

@@ -176,7 +176,7 @@ export default function RegisterPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="btn-gradient w-full max-w-xs py-3 rounded-full font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-8 mx-auto"
+              className="btn-gradient w-full max-w-xs py-3 rounded-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-8 mx-auto"
             >
               {isLoading ? (
                 <>

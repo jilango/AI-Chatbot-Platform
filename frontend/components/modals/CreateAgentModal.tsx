@@ -272,7 +272,7 @@ export default function CreateAgentModal({
                 (agentType === 'project_agent' && !selectedProjectId) || 
                 isSubmitting
               }
-              className="btn-gradient flex-1 px-4 py-3 rounded-full font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+              className="btn-gradient flex-1 px-4 py-3 rounded-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmitting ? 'Creating...' : 'Create Agent'}
             </button>

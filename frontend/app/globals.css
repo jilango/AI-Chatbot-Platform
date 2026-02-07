@@ -155,6 +155,7 @@ body {
 /* Gradient CTA button - Primary action buttons throughout the app */
 button.btn-gradient,
 .btn-gradient {
+  border-radius: 0.5rem; /* rounded-lg - matches grey buttons */
   background: linear-gradient(135deg, #3B82F6, #0EA5E9, #06B6D4) !important;
   background-image:
     radial-gradient(circle at var(--highlight-x, 50%) var(--highlight-y, 0%), rgba(235,245,248,1) 0%, rgba(211,229,235,0.85) 20%, rgba(171,217,211,0.5) 40%, transparent 65%),

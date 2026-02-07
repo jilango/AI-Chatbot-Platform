@@ -74,11 +74,7 @@ export default function ChatInput({ onSend, disabled }: ChatInputProps) {
               <button
                 onClick={handleSubmit}
                 disabled={!message.trim() || disabled}
-                className={`p-2.5 rounded-full font-semibold transition-all flex items-center justify-center flex-shrink-0 ${
-                  !message.trim() || disabled
-                    ? 'bg-muted text-muted-foreground cursor-not-allowed'
-                    : 'btn-gradient'
-                }`}
+                className="btn-gradient p-2.5 rounded-lg font-semibold transition-all flex items-center justify-center flex-shrink-0 disabled:opacity-70 disabled:cursor-not-allowed"
                 title={disabled ? 'Please wait...' : 'Send message (Enter)'}
               >
                 {disabled ? (

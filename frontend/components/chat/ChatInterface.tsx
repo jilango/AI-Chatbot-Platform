@@ -332,7 +332,7 @@ export default function ChatInterface({ chatType, chatId }: ChatInterfaceProps) 
               {chatType === 'agent' && (
                 <button
                   onClick={() => setShowEditAgent(true)}
-                  className="flex items-center gap-2 px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted border border-border rounded-lg transition-all"
+                  className="card-gradient-border glow group flex items-center gap-2 px-4 py-2 text-sm text-muted-foreground hover:text-foreground rounded-xl border border-border bg-card hover:bg-muted hover:border-transparent transition-[transform,box-shadow,border-color]"
                   aria-label="Edit agent"
                 >
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -350,7 +350,7 @@ export default function ChatInterface({ chatType, chatId }: ChatInterfaceProps) 
                         fileUploadRef.current?.triggerUpload();
                       }, 100);
                     }}
-                    className="flex items-center gap-2 px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted border border-border rounded-lg transition-all"
+                    className="card-gradient-border glow group flex items-center gap-2 px-4 py-2 text-sm text-muted-foreground hover:text-foreground rounded-xl border border-border bg-card hover:bg-muted hover:border-transparent transition-[transform,box-shadow,border-color]"
                     aria-label="Upload file"
                   >
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -360,7 +360,7 @@ export default function ChatInterface({ chatType, chatId }: ChatInterfaceProps) 
                   </button>
                   <button
                     onClick={() => setShowFiles(!showFiles)}
-                    className="flex items-center gap-2 px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted border border-border rounded-lg transition-all"
+                    className="card-gradient-border glow group flex items-center gap-2 px-4 py-2 text-sm text-muted-foreground hover:text-foreground rounded-xl border border-border bg-card hover:bg-muted hover:border-transparent transition-[transform,box-shadow,border-color]"
                     aria-label="Toggle files"
                   >
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -498,18 +498,18 @@ export default function ChatInterface({ chatType, chatId }: ChatInterfaceProps) 
               )}
               <div className="flex items-center justify-between pt-2">
                 <button
-                  type="submit"
-                  disabled={!editName.trim() || isSavingAgent}
-                  className="px-4 py-2 bg-primary hover:bg-primary-hover text-black dark:text-white border border-border rounded-lg font-medium transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:active:scale-100"
-                >
-                  {isSavingAgent ? 'Saving...' : 'Save changes'}
-                </button>
-                <button
                   type="button"
                   onClick={handleDeleteAgent}
                   className="text-sm text-red-500 hover:text-red-600 hover:underline"
                 >
                   Delete Agent
+                </button>
+                <button
+                  type="submit"
+                  disabled={!editName.trim() || isSavingAgent}
+                  className="px-4 py-2 bg-primary hover:bg-primary-hover text-black dark:text-white border border-border rounded-lg font-medium transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:active:scale-100"
+                >
+                  {isSavingAgent ? 'Saving...' : 'Save changes'}
                 </button>
               </div>
             </form>
