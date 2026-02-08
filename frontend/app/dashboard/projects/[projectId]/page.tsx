@@ -359,9 +359,9 @@ export default function ProjectPage() {
                         className="mt-0.5 w-4 h-4 text-primary focus:ring-2 focus:ring-ring"
                       />
                       <div>
-                        <span className="font-medium">RAG (Semantic Search)</span>
+                        <span className="font-medium">Recent Messages</span>
                         <p className="text-xs text-muted-foreground mt-1">
-                          Finds the most relevant context based on the current conversation (smarter, more accurate)
+                          Shows the most recent conversations from other agents (faster, simpler)
                         </p>
                       </div>
                     </label>
@@ -375,9 +375,9 @@ export default function ProjectPage() {
                         className="mt-0.5 w-4 h-4 text-primary focus:ring-2 focus:ring-ring"
                       />
                       <div>
-                        <span className="font-medium">Recent Messages</span>
+                        <span className="font-medium">RAG (Semantic Search)</span>
                         <p className="text-xs text-muted-foreground mt-1">
-                          Shows the most recent conversations from other agents (faster, simpler)
+                        Finds the most relevant context based on the current conversation (smarter, more accurate)
                         </p>
                       </div>
                     </label>
