@@ -84,7 +84,7 @@ export default function DashboardPage() {
               <ThemeToggle />
               <button
                 onClick={logout}
-                className="card-gradient-border glow group flex items-center gap-2 px-4 py-2 text-sm text-muted-foreground hover:text-foreground rounded-xl border border-border bg-card hover:bg-muted hover:border-transparent transition-[transform,box-shadow,border-color]"
+                className="card-gradient-border-red glow-red group flex items-center gap-2 px-4 py-2 text-sm text-white rounded-xl border border-border bg-card hover:bg-muted hover:border-transparent transition-[transform,box-shadow,border-color]"
                 aria-label="Log out"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

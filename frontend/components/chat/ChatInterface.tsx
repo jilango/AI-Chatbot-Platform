@@ -46,6 +46,7 @@ export default function ChatInterface({ chatType, chatId }: ChatInterfaceProps) 
   const [editPromptContent, setEditPromptContent] = useState('');
   const [isSavingAgent, setIsSavingAgent] = useState(false);
   const [showSaveWarning, setShowSaveWarning] = useState(false);
+  const [showActionsMenu, setShowActionsMenu] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const eventSourceRef = useRef<EventSource | null>(null);
   const fileUploadRef = useRef<FileUploadHandle>(null);
@@ -209,6 +210,18 @@ export default function ChatInterface({ chatType, chatId }: ChatInterfaceProps) 
     return () => document.removeEventListener('keydown', handleKeydown);
   }, [showClearConfirm]);
 
+  useEffect(() => {
+    if (!showActionsMenu) return;
+    const handleKeydown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        setShowActionsMenu(false);
+      }
+    };
+    document.addEventListener('keydown', handleKeydown);
+    return () => document.removeEventListener('keydown', handleKeydown);
+  }, [showActionsMenu]);
+
   const handleClearChat = async () => {
     try {
       if (chatType === 'agent') {
@@ -306,13 +319,13 @@ export default function ChatInterface({ chatType, chatId }: ChatInterfaceProps) 
               </button>
               <div className="flex items-center gap-3">
                 {chatType === 'temp' ? (
-                  <div className="w-10 h-10 bg-accent/10 rounded-lg flex items-center justify-center">
+                  <div className="hidden sm:flex w-10 h-10 bg-accent/10 rounded-lg items-center justify-center">
                     <svg className="w-5 h-5 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                     </svg>
                   </div>
                 ) : (
-                  <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center shadow-lg">
+                  <div className="hidden sm:flex w-10 h-10 bg-primary rounded-lg items-center justify-center shadow-lg">
                     <svg className="w-5 h-5 text-white dark:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                     </svg>
@@ -321,7 +334,7 @@ export default function ChatInterface({ chatType, chatId }: ChatInterfaceProps) 
                 <div>
                   <h1 className="text-lg font-semibold">{chatInfo.name}</h1>
                   {chatInfo.description && (
-                    <p className="text-xs text-muted-foreground line-clamp-1">{chatInfo.description}</p>
+                    <p className="hidden sm:block text-xs text-muted-foreground line-clamp-1">{chatInfo.description}</p>
                   )}
                 </div>
               </div>
@@ -329,62 +342,150 @@ export default function ChatInterface({ chatType, chatId }: ChatInterfaceProps) 
 
             {/* Right: Actions */}
             <div className="flex items-center gap-2">
-              {chatType === 'agent' && (
-                <button
-                  onClick={() => setShowEditAgent(true)}
-                  className="card-gradient-border glow group flex items-center gap-2 px-4 py-2 text-sm text-muted-foreground hover:text-foreground rounded-xl border border-border bg-card hover:bg-muted hover:border-transparent transition-[transform,box-shadow,border-color]"
-                  aria-label="Edit agent"
-                >
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                  </svg>
-                  <span className="hidden sm:inline">Edit agent</span>
-                </button>
-              )}
-              {chatType === 'agent' && agentProjectId && (
-                <>
-                  <button
-                    onClick={() => {
-                      setShowFiles(true);
-                      setTimeout(() => {
-                        fileUploadRef.current?.triggerUpload();
-                      }, 100);
-                    }}
-                    className="card-gradient-border glow group flex items-center gap-2 px-4 py-2 text-sm text-muted-foreground hover:text-foreground rounded-xl border border-border bg-card hover:bg-muted hover:border-transparent transition-[transform,box-shadow,border-color]"
-                    aria-label="Upload file"
-                  >
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                    </svg>
-                    <span className="hidden sm:inline">Upload File</span>
-                  </button>
-                  <button
-                    onClick={() => setShowFiles(!showFiles)}
-                    className="card-gradient-border glow group flex items-center gap-2 px-4 py-2 text-sm text-muted-foreground hover:text-foreground rounded-xl border border-border bg-card hover:bg-muted hover:border-transparent transition-[transform,box-shadow,border-color]"
-                    aria-label="Toggle files"
-                  >
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                    <span className="hidden sm:inline">{showFiles ? 'Hide' : 'Show'} Files</span>
-                  </button>
-                </>
-              )}
+              {/* Mobile: single More button opens menu */}
               <button
-                onClick={() => setShowClearConfirm(true)}
-                disabled={messages.length === 0}
-                className="flex items-center gap-2 px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted border border-border rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
-                aria-label="Clear chat history"
+                onClick={() => setShowActionsMenu(true)}
+                className="flex sm:hidden card-gradient-border glow group p-2 rounded-xl border border-border bg-card hover:bg-muted hover:border-transparent transition-[transform,box-shadow,border-color]"
+                aria-label="More actions"
+                aria-expanded={showActionsMenu}
+                aria-haspopup="menu"
               >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                <svg className="w-5 h-5 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
                 </svg>
-                <span className="hidden sm:inline">Clear Chat</span>
               </button>
+              {/* Desktop: four action buttons */}
+              <div className="hidden sm:flex items-center gap-2">
+                {chatType === 'agent' && (
+                  <button
+                    onClick={() => setShowEditAgent(true)}
+                    className="card-gradient-border glow group flex items-center gap-2 px-4 py-2 text-sm text-muted-foreground hover:text-foreground rounded-xl border border-border bg-card hover:bg-muted hover:border-transparent transition-[transform,box-shadow,border-color]"
+                    aria-label="Edit agent"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                    <span>Edit agent</span>
+                  </button>
+                )}
+                {chatType === 'agent' && agentProjectId && (
+                  <>
+                    <button
+                      onClick={() => {
+                        setShowFiles(true);
+                        setTimeout(() => {
+                          fileUploadRef.current?.triggerUpload();
+                        }, 100);
+                      }}
+                      className="card-gradient-border glow group flex items-center gap-2 px-4 py-2 text-sm text-muted-foreground hover:text-foreground rounded-xl border border-border bg-card hover:bg-muted hover:border-transparent transition-[transform,box-shadow,border-color]"
+                      aria-label="Upload file"
+                    >
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                      </svg>
+                      <span>Upload File</span>
+                    </button>
+                    <button
+                      onClick={() => setShowFiles(!showFiles)}
+                      className="card-gradient-border glow group flex items-center gap-2 px-4 py-2 text-sm text-muted-foreground hover:text-foreground rounded-xl border border-border bg-card hover:bg-muted hover:border-transparent transition-[transform,box-shadow,border-color]"
+                      aria-label="Toggle files"
+                    >
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                      <span>{showFiles ? 'Hide' : 'Show'} Files</span>
+                    </button>
+                  </>
+                )}
+                <button
+                  onClick={() => setShowClearConfirm(true)}
+                  disabled={messages.length === 0}
+                  className="card-gradient-border-red glow-red group flex items-center gap-2 px-4 py-2 text-sm text-white border border-border bg-card hover:bg-muted rounded-xl transition-[transform,box-shadow,border-color] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:translate-y-0"
+                  aria-label="Clear chat history"
+                >
+                  <svg className="w-4 h-4 shrink-0 relative z-[1]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                  <span className="relative z-[1]">Clear Chat</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </header>
+
+      {/* Actions menu (mobile) */}
+      {showActionsMenu && (
+        <div
+          className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200"
+          onClick={(e) => { if (e.target === e.currentTarget) setShowActionsMenu(false); }}
+        >
+          <div className="bg-popover rounded-2xl border border-border shadow-2xl animate-in zoom-in-95 duration-200 p-2 max-w-xs min-w-[200px]" onClick={(e) => e.stopPropagation()}>
+            {chatType === 'agent' && (
+              <button
+                type="button"
+                onClick={() => {
+                  setShowEditAgent(true);
+                  setShowActionsMenu(false);
+                }}
+                className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-muted w-full text-left transition-colors"
+              >
+                <svg className="w-5 h-5 text-muted-foreground shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+                <span className="text-sm">Edit agent</span>
+              </button>
+            )}
+            {chatType === 'agent' && agentProjectId && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowFiles(true);
+                    setTimeout(() => { fileUploadRef.current?.triggerUpload(); }, 100);
+                    setShowActionsMenu(false);
+                  }}
+                  className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-muted w-full text-left transition-colors"
+                >
+                  <svg className="w-5 h-5 text-muted-foreground shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                  </svg>
+                  <span className="text-sm">Upload file</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowFiles(!showFiles);
+                    setShowActionsMenu(false);
+                  }}
+                  className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-muted w-full text-left transition-colors"
+                >
+                  <svg className="w-5 h-5 text-muted-foreground shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  <span className="text-sm">{showFiles ? 'Hide' : 'Show'} Files</span>
+                </button>
+              </>
+            )}
+            <button
+              type="button"
+              onClick={() => {
+                if (messages.length > 0) {
+                  setShowClearConfirm(true);
+                  setShowActionsMenu(false);
+                }
+              }}
+              disabled={messages.length === 0}
+              className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-muted w-full text-left transition-colors disabled:opacity-40 disabled:pointer-events-none disabled:cursor-not-allowed"
+            >
+              <svg className="w-5 h-5 text-muted-foreground shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+              <span className="text-sm text-red-500">Clear chat</span>
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Clear Confirmation Modal */}
       {showClearConfirm && (
@@ -413,7 +514,7 @@ export default function ChatInterface({ chatType, chatId }: ChatInterfaceProps) 
                   </button>
                   <button
                     onClick={handleClearChat}
-                    className="flex-1 px-4 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-lg font-medium transition-all"
+                    className="flex-1 px-4 py-2.5 btn-gradient-red rounded-lg font-semibold transition-all"
                   >
                     Clear All
                   </button>
@@ -496,18 +597,18 @@ export default function ChatInterface({ chatType, chatId }: ChatInterfaceProps) 
                   />
                 </div>
               )}
-              <div className="flex items-center justify-between pt-2">
+              <div className="flex items-center justify-between pt-2 gap-3">
                 <button
                   type="button"
                   onClick={handleDeleteAgent}
-                  className="text-sm text-red-500 hover:text-red-600 hover:underline"
+                  className="card-gradient-border-red glow-red group flex items-center justify-center h-10 px-4 py-2 rounded-lg border border-border bg-card hover:bg-muted hover:border-transparent text-white font-medium transition-[transform,box-shadow,border-color]"
                 >
-                  Delete Agent
+                  <span className="relative z-[1]">Delete Agent</span>
                 </button>
                 <button
                   type="submit"
                   disabled={!editName.trim() || isSavingAgent}
-                  className="px-4 py-2 bg-primary hover:bg-primary-hover text-black dark:text-white border border-border rounded-lg font-medium transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:active:scale-100"
+                  className="btn-gradient h-10 px-4 py-2 rounded-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isSavingAgent ? 'Saving...' : 'Save changes'}
                 </button>

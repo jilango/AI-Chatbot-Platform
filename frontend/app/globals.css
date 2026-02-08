@@ -360,3 +360,88 @@ button.btn-gradient,
   position: relative;
   z-index: 1;
 }
+
+/* Red gradient border - destructive actions (Logout, Delete, Clear) */
+.card-gradient-border-red {
+  position: relative;
+  overflow: visible;
+}
+
+.card-gradient-border-red::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: 0.75rem;
+  background:
+    radial-gradient(circle at var(--highlight-x, 50%) var(--highlight-y, 0%), rgba(254,226,226,1) 0%, rgba(254,202,202,0.9) 20%, rgba(252,165,165,0.6) 40%, transparent 65%),
+    linear-gradient(135deg, #DC2626, #EA580C, #B91C1C);
+  background-size: 100% 100%, 100% 100%;
+  animation: orbit-highlight 14s linear infinite;
+  z-index: 0;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.card-gradient-border-red:hover::before {
+  opacity: 1;
+}
+
+.card-gradient-border-red::after {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  border-radius: calc(0.75rem - 1px);
+  background-color: var(--card);
+  z-index: 0;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.card-gradient-border-red.group:hover::after,
+.card-gradient-border-red:hover::after {
+  opacity: 1;
+  background-color: var(--muted);
+  transition: opacity 0.3s ease, background-color 0s ease;
+}
+
+.card-gradient-border-red > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Red glow on hover for destructive border buttons */
+.glow-red {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.glow-red:hover {
+  box-shadow: 0 12px 40px -8px rgba(220, 38, 38, 0.5);
+  transform: translateY(-2px);
+}
+
+/* Filled red gradient button (e.g. Clear All in modal) */
+.btn-gradient-red {
+  border-radius: 0.5rem;
+  background: linear-gradient(135deg, #DC2626, #EA580C, #B91C1C) !important;
+  background-image:
+    radial-gradient(circle at var(--highlight-x, 50%) var(--highlight-y, 0%), rgba(254,226,226,1) 0%, rgba(254,202,202,0.85) 20%, rgba(252,165,165,0.5) 40%, transparent 65%),
+    linear-gradient(135deg, #DC2626, #EA580C, #B91C1C) !important;
+  background-size: 100% 100%, 100% 100%;
+  animation: orbit-highlight 24s linear infinite;
+  color: white !important;
+  box-shadow: 0 10px 30px -10px rgba(220, 38, 38, 0.45) !important;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border: none !important;
+}
+
+.btn-gradient-red:hover:not(:disabled) {
+  box-shadow: 0 15px 40px -10px rgba(220, 38, 38, 0.6) !important;
+  transform: translateY(-2px);
+}
+
+.btn-gradient-red:focus-visible {
+  outline: none !important;
+  box-shadow: 0 0 0 2px rgba(248, 113, 113, 0.6) !important;
+}
