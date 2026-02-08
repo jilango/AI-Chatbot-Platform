@@ -44,7 +44,7 @@ export default function MessageBubble({ role, content, timestamp, isLatest }: Me
           <div
             className={`relative px-5 py-4 rounded-2xl ${
               isUser
-                ? 'bg-primary text-black dark:text-white shadow-lg'
+                ? 'bg-primary text-white shadow-lg'
                 : 'bg-card border border-border shadow-sm'
             }`}
           >
